@@ -1,30 +1,72 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
+[DisallowMultipleComponent]
 public class PlayerMovement : MonoBehaviour
 {
-    [SerializeField] private float moveSpeed = 6f;
+    [Header("Movement")]
+    [SerializeField] private float fallbackMoveSpeed = 6f;   // 没有 stats 时用
     [SerializeField] private float rotationSpeed = 12f;
+
+    [Header("Gravity")]
     [SerializeField] private bool useGravity = true;
     [SerializeField] private float gravity = -9.81f;
+
+    [Header("Debug")]
     [SerializeField] private bool enableDebugLogs = false;
 
     private CharacterController controller;
+    private PlayerResources resources;
     private float verticalVelocity;
     private bool isMoving;
+
+    [HideInInspector] public float moveSpeedMultiplier = 1f; // 新增字段，默认1
+    [HideInInspector] public bool isMovementLocked = false;
+
+    private float CurrentMoveSpeed
+    {
+        get
+        {
+            if (resources != null && resources.StatsConfig != null)
+                return resources.StatsConfig.moveSpeed;
+
+            return fallbackMoveSpeed;
+        }
+    }
 
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
+        resources = GetComponent<PlayerResources>();
+
+        if (controller == null)
+            Debug.LogError("[PlayerMovement] CharacterController missing!", this);
+
+        if (resources == null)
+            Debug.LogWarning("[PlayerMovement] No PlayerResources found on player. Using fallbackMoveSpeed.", this);
     }
 
     private void Update()
     {
+        if (resources != null && resources.IsDead)
+        {
+            // 死亡不允许移动
+            return;
+        }
+
+        // 🔒 闪避等情况可以锁定普通移动
+        if (isMovementLocked)
+        {
+            return;
+        }
+
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
 
         Vector3 inputDirection = new Vector3(horizontal, 0f, vertical);
-        Vector3 moveDir = inputDirection.sqrMagnitude > 1f ? inputDirection.normalized : inputDirection;
+        Vector3 moveDir = inputDirection.sqrMagnitude > 1f
+            ? inputDirection.normalized
+            : inputDirection;
 
         HandleDebugLogging(moveDir);
 
@@ -38,7 +80,7 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
-        Vector3 move = moveDir * moveSpeed;
+        Vector3 move = moveDir * CurrentMoveSpeed * moveSpeedMultiplier;
 
         if (useGravity)
         {
@@ -53,19 +95,17 @@ public class PlayerMovement : MonoBehaviour
     private void HandleDebugLogging(Vector3 moveDir)
     {
         if (!enableDebugLogs)
-        {
             return;
-        }
 
         bool currentlyMoving = moveDir.sqrMagnitude > 0.0001f;
 
         if (currentlyMoving && !isMoving)
         {
-            Debug.Log("Player started moving.");
+            Debug.Log("[PlayerMovement] Player started moving.");
         }
         else if (!currentlyMoving && isMoving)
         {
-            Debug.Log("Player stopped moving.");
+            Debug.Log("[PlayerMovement] Player stopped moving.");
         }
 
         isMoving = currentlyMoving;
@@ -89,7 +129,10 @@ public class PlayerMovement : MonoBehaviour
                 if (lookDirection.sqrMagnitude > 0.01f)
                 {
                     Quaternion targetRotation = Quaternion.LookRotation(lookDirection, Vector3.up);
-                    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+                    transform.rotation = Quaternion.Slerp(
+                        transform.rotation,
+                        targetRotation,
+                        rotationSpeed * Time.deltaTime);
                     return;
                 }
             }
@@ -100,10 +143,13 @@ public class PlayerMovement : MonoBehaviour
 
     private void RotateTowardsDirection(Vector3 direction)
     {
-        if (direction.sqrMagnitude > 0.01f)
-        {
-            Quaternion targetRotation = Quaternion.LookRotation(direction, Vector3.up);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
-        }
+        if (direction.sqrMagnitude <= 0.01f)
+            return;
+
+        Quaternion targetRotation = Quaternion.LookRotation(direction, Vector3.up);
+        transform.rotation = Quaternion.Slerp(
+            transform.rotation,
+            targetRotation,
+            rotationSpeed * Time.deltaTime);
     }
 }
