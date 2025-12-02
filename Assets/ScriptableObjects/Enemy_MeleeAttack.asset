@@ -12,15 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 23b7e4405d614c4418e30b97f39c9b4b, type: 3}
   m_Name: Enemy_MeleeAttack
   m_EditorClassIdentifier: 
-  attackId: light_1
-  hitRange: 1.5
-  hitRadius: 1
-  startup: 0.15
-  active: 0.08
-  recovery: 0.25
+  attackId: enemy_slash_1
+  hitRange: 1
+  hitRadius: 1.2
+  startup: 0.35
+  active: 0.12
+  recovery: 1
   staminaCost: 0
   manaCost: 0
-  damage: 10
+  damage: 12
   moveMultiplierStartup: 0.4
   moveMultiplierActive: 0.2
   moveMultiplierRecovery: 0.7
