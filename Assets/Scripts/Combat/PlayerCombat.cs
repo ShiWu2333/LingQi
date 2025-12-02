@@ -15,7 +15,6 @@ namespace LingQi.Combat
         private Weapon currentWeapon;
         private PlayerResources resources;
         private float cooldownTimer;
-        private Camera cachedCamera;
 
         private void Awake()
         {
@@ -24,7 +23,6 @@ namespace LingQi.Combat
 
         private void Start()
         {
-            cachedCamera = Camera.main;
             currentWeapon = primaryWeapon != null ? primaryWeapon : secondaryWeapon;
         }
 
@@ -103,8 +101,9 @@ namespace LingQi.Combat
         private void PerformAttack(float damage, float range)
         {
             cooldownTimer = attackCooldown;
-            Vector3 origin = cachedCamera != null ? cachedCamera.transform.position : transform.position + Vector3.up;
-            Vector3 direction = cachedCamera != null ? cachedCamera.transform.forward : transform.forward;
+            Transform attackTransform = currentWeapon != null ? currentWeapon.transform : transform;
+            Vector3 origin = attackTransform.position;
+            Vector3 direction = attackTransform.forward;
 
             if (Physics.Raycast(origin, direction, out RaycastHit hit, range, hitMask, QueryTriggerInteraction.Ignore))
             {
