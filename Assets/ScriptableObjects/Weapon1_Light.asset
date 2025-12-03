@@ -29,10 +29,12 @@ MonoBehaviour:
   stepDuration: 0.1
   cancelableAfter: 0.1
   bufferWindow: 0.15
-  poiseDamage: 0
+  poiseDamage: 5
   impact: 0
   comboGroupId: 
   comboStepIndex: 0
   nextCombo: {fileID: 0}
   comboInputOpenTime: 0
   comboInputCloseTime: 0
+  animationClip: {fileID: 7400000, guid: 7955a24b57357004ca47200c7aaeb73d, type: 2}
+  animatorStateName: LightAttack

@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using UnityEngine;
 
 [RequireComponent(typeof(Collider))]
@@ -10,8 +10,12 @@ public class EnemyResources : MonoBehaviour
     [Header("Runtime (ReadOnly)")]
     [SerializeField] private float currentHP;
 
+    // HP å˜åŒ– & æ­»äº¡äº‹ä»¶ï¼ˆåŸæ¥å°±æœ‰ï¼‰
     public event Action<float, float> OnHPChanged;
     public event Action OnDeath;
+
+    // ğŸ”´ æ–°å¢ï¼šå—å‡»äº‹ä»¶ï¼ˆåªç®¡â€œå—åˆ°äº†å¤šå°‘ä¼¤å®³â€ï¼‰
+    public event Action<float> OnDamaged;
 
     public EnemyStatsConfig Stats => stats;
     public float CurrentHP => currentHP;
@@ -27,7 +31,7 @@ public class EnemyResources : MonoBehaviour
             Debug.LogError("[EnemyResources] EnemyStatsConfig is not assigned!", this);
         }
 
-        _flashOnHit = GetComponent<FlashOnHit>();   // ±ğÍüÁË»º´æ
+        _flashOnHit = GetComponent<FlashOnHit>();   // åˆ«å¿˜äº†ç¼“å­˜
 
         InitFromConfig();
     }
@@ -41,14 +45,14 @@ public class EnemyResources : MonoBehaviour
         OnHPChanged?.Invoke(currentHP, MaxHP);
     }
 
-    // ²»´øÃüÖĞµã£¨±¸ÓÃ£©
+    // ä¸å¸¦å‘½ä¸­ç‚¹ï¼ˆå¤‡ç”¨ï¼‰
     public void TakeDamage(float amount)
     {
         InternalTakeDamage(amount);
         PlayHitFeedback(transform.position, amount);
     }
 
-    // ´øÃüÖĞµã£ºÍæ¼Ò Hitbox µ÷Õâ¸ö
+    // å¸¦å‘½ä¸­ç‚¹ï¼šç©å®¶ Hitbox è°ƒè¿™ä¸ª
     public void TakeDamage(float amount, Vector3 hitPoint)
     {
         InternalTakeDamage(amount);
@@ -57,9 +61,13 @@ public class EnemyResources : MonoBehaviour
 
     private void InternalTakeDamage(float amount)
     {
-        if (_isDead) return;
+        if (_isDead || amount <= 0f) return;
 
         currentHP -= amount;
+
+        // ğŸ”´ æ–°å¢ï¼šçœŸæ­£æ‰£è¡€æ—¶å¹¿æ’­å—å‡»äº‹ä»¶ï¼ˆåŒ…æ‹¬è‡´æ­»ä¸€å‡»ï¼‰
+        OnDamaged?.Invoke(amount);
+
         if (currentHP <= 0f)
         {
             currentHP = 0f;
@@ -75,16 +83,16 @@ public class EnemyResources : MonoBehaviour
 
     private void PlayHitFeedback(Vector3 worldPos, float amount)
     {
-        // ÉÔÎ¢ÍùÉÏÌ§Ò»µã£¬ÈÃÊı×Ö²»ÒªÂñ½øµØ°å
+        // ç¨å¾®å¾€ä¸ŠæŠ¬ä¸€ç‚¹ï¼Œè®©æ•°å­—ä¸è¦åŸ‹è¿›åœ°æ¿
         Vector3 popupPos = worldPos + Vector3.up * 0.8f;
 
-        // ÉÁ°×
+        // é—ªç™½
         if (_flashOnHit != null)
         {
             _flashOnHit.Trigger();
         }
 
-        // ÉËº¦Êı×Ö
+        // ä¼¤å®³æ•°å­—
         DamagePopupManager.Show(amount, popupPos);
     }
 

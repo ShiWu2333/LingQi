@@ -1,5 +1,6 @@
-using System.Collections;
+ï»¿using System.Collections;
 using UnityEngine;
+using System;
 using UnityEngine.AI;
 
 [RequireComponent(typeof(NavMeshAgent))]
@@ -15,7 +16,7 @@ public class EnemyAIController : MonoBehaviour
     }
 
     [Header("Config")]
-    [SerializeField] private LayerMask playerLayer;   // Ö»¼ì²âÍæ¼Ò
+    [SerializeField] private LayerMask playerLayer;   // åªæ£€æµ‹ç©å®¶
     [SerializeField] private float hitboxRadius = 1.0f;
     [SerializeField] private float hitboxHeightOffset = 1.0f;
     [SerializeField] private bool debugDrawHitbox = false;
@@ -27,14 +28,17 @@ public class EnemyAIController : MonoBehaviour
     private NavMeshAgent _agent;
     private EnemyResources _resources;
     private Transform _player;
-    private AttackData _attackData;   // Ä¿Ç°Ö»ÓÃÒ»¸öÄ¬ÈÏ¹¥»÷
+    private AttackData _attackData;   // ç›®å‰åªç”¨ä¸€ä¸ªé»˜è®¤æ”»å‡»
     public string CurrentDebugState => state.ToString();
-    // ¹¥»÷ÉúĞ§½×¶Î±ê¼Ç + ×î½üÒ»´Î hitbox Êı¾İ
+    // æ”»å‡»ç”Ÿæ•ˆé˜¶æ®µæ ‡è®° + æœ€è¿‘ä¸€æ¬¡ hitbox æ•°æ®
     private bool isAttackActive;
     private Vector3 lastHitboxCenter;
     private float lastHitboxRadius;
     private EnemyPoiseController _poise;
-    private Coroutine _attackRoutine;    // ¼Ç×¡µ±Ç°¹¥»÷Ğ­³Ì
+    private Coroutine _attackRoutine;    // è®°ä½å½“å‰æ”»å‡»åç¨‹
+
+    public event Action<AttackData> OnAttackStarted;
+    public event Action<AttackData> OnAttackEnded;
 
     private void Awake()
     {
@@ -69,15 +73,15 @@ public class EnemyAIController : MonoBehaviour
             Debug.LogWarning("[EnemyAI] defaultAttack is not assigned in EnemyStatsConfig.", this);
         }
 
-        // NavMeshAgent »ù´¡²ÎÊı´Ó stats ¶Á
+        // NavMeshAgent åŸºç¡€å‚æ•°ä» stats è¯»
         _agent.speed = _resources.Stats.chaseSpeed;
         _agent.angularSpeed = _resources.Stats.rotateSpeed;
-        _agent.stoppingDistance = _resources.Stats.attackRange * 0.8f; // ÉÔÎ¢ÔçÒ»µãÍ£ÏÂ
+        _agent.stoppingDistance = _resources.Stats.attackRange * 0.8f; // ç¨å¾®æ—©ä¸€ç‚¹åœä¸‹
     }
 
     private void Start()
     {
-        // ×Ô¶¯ÕÒÍæ¼Ò£¨ÒªÇó Player ÎïÌå Tag = "Player"£©
+        // è‡ªåŠ¨æ‰¾ç©å®¶ï¼ˆè¦æ±‚ Player ç‰©ä½“ Tag = "Player"ï¼‰
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
         if (playerObj != null)
         {
@@ -91,7 +95,7 @@ public class EnemyAIController : MonoBehaviour
         state = EnemyState.Idle;
         stateTimer = 0f;
 
-        // µĞÈËËÀÍöÊ±½ûÓÃ AI
+        // æ•Œäººæ­»äº¡æ—¶ç¦ç”¨ AI
         _resources.OnDeath += HandleDeath;
     }
 
@@ -123,7 +127,7 @@ public class EnemyAIController : MonoBehaviour
                 TickChase();
                 break;
             case EnemyState.Attacking:
-                // ¹¥»÷¹ı³ÌÓÃĞ­³Ì¿ØÖÆ£¬²»ÔÚÕâÀï¸üĞÂ
+                // æ”»å‡»è¿‡ç¨‹ç”¨åç¨‹æ§åˆ¶ï¼Œä¸åœ¨è¿™é‡Œæ›´æ–°
                 break;
             case EnemyState.Cooldown:
                 TickCooldown();
@@ -136,22 +140,22 @@ public class EnemyAIController : MonoBehaviour
         switch (reaction)
         {
             case ImpactReaction.None:
-                // ÍêÈ«ÎŞÊÂ·¢Éú£¨Õæ°ÔÌå£©
+                // å®Œå…¨æ— äº‹å‘ç”Ÿï¼ˆçœŸéœ¸ä½“ï¼‰
                 break;
 
             case ImpactReaction.LightStagger:
-                // ÇáÎ¢Ó²Ö±£º²»´ò¶Ï¶¯×÷£¬µ«´¥·¢Ò»¸öÇáÎ¢ÊÜ»÷·´À¡
+                // è½»å¾®ç¡¬ç›´ï¼šä¸æ‰“æ–­åŠ¨ä½œï¼Œä½†è§¦å‘ä¸€ä¸ªè½»å¾®å—å‡»åé¦ˆ
                 PlaySmallStagger();
                 break;
 
             case ImpactReaction.MediumStagger:
-                // ÖĞÓ²Ö±£º´ò¶Ïµ±Ç°¶¯×÷ + ½øÈëÊÜ»÷×´Ì¬
+                // ä¸­ç¡¬ç›´ï¼šæ‰“æ–­å½“å‰åŠ¨ä½œ + è¿›å…¥å—å‡»çŠ¶æ€
                 InterruptCurrentAction();
                 PlayMediumStagger();
                 break;
 
             case ImpactReaction.HeavyStagger:
-                // ´óÓ²Ö±£º´ò¶Ïµ±Ç°¶¯×÷ + ½øÈë´óÊÜ»÷/»÷ÍË
+                // å¤§ç¡¬ç›´ï¼šæ‰“æ–­å½“å‰åŠ¨ä½œ + è¿›å…¥å¤§å—å‡»/å‡»é€€
                 InterruptCurrentAction();
                 PlayLargeStagger();
                 break;
@@ -159,20 +163,20 @@ public class EnemyAIController : MonoBehaviour
     }
     private void PlaySmallStagger()
     {
-        // TODO: ½«À´°óÒ»¸öÇáÎ¢¶¶¶¯¶¯»­
-        // ÏÖÔÚ¿ÉÒÔÏÈÊ²Ã´¶¼²»¸É£¬»òÕß¼òµ¥ log Ò»ÏÂ
+        // TODO: å°†æ¥ç»‘ä¸€ä¸ªè½»å¾®æŠ–åŠ¨åŠ¨ç”»
+        // ç°åœ¨å¯ä»¥å…ˆä»€ä¹ˆéƒ½ä¸å¹²ï¼Œæˆ–è€…ç®€å• log ä¸€ä¸‹
         // Debug.Log("[Enemy] SmallStagger");
     }
 
     private void PlayMediumStagger()
     {
-        // TODO: ½«À´²¥·Å¡°ÊÜ»÷´ò¶Ï¡±¶¯»­
-        // µ±Ç°Ô­ĞÍ¿ÉÒÔÏÈÈÃ AI ÔÚÔ­µØÍ£Ò»ÏÂÖ®Àà
+        // TODO: å°†æ¥æ’­æ”¾â€œå—å‡»æ‰“æ–­â€åŠ¨ç”»
+        // å½“å‰åŸå‹å¯ä»¥å…ˆè®© AI åœ¨åŸåœ°åœä¸€ä¸‹ä¹‹ç±»
     }
 
     private void PlayLargeStagger()
     {
-        // TODO: ½«À´²¥·Å¡°ÊÜ»÷ + »÷ÍË¡±¶¯»­
+        // TODO: å°†æ¥æ’­æ”¾â€œå—å‡» + å‡»é€€â€åŠ¨ç”»
     }
 
     private void InterruptCurrentAction()
@@ -185,7 +189,7 @@ public class EnemyAIController : MonoBehaviour
 
         isAttackActive = false;
 
-        // ÔİÊ±£º´ò¶Ïºó½øÈëÀäÈ´ / »òÓ²Ö±×´Ì¬£¨Ö®ºóÄã¿ÉÄÜ»á²ğ³ö Stagger ×´Ì¬£©
+        // æš‚æ—¶ï¼šæ‰“æ–­åè¿›å…¥å†·å´ / æˆ–ç¡¬ç›´çŠ¶æ€ï¼ˆä¹‹åä½ å¯èƒ½ä¼šæ‹†å‡º Stagger çŠ¶æ€ï¼‰
         SwitchState(EnemyState.Cooldown);
         stateTimer = 0f;
     }
@@ -205,18 +209,18 @@ public class EnemyAIController : MonoBehaviour
 
         if (dist > _resources.Stats.detectionRange * 1.5f)
         {
-            // ÅÜÔ¶ÁË£¬»Ø Idle
+            // è·‘è¿œäº†ï¼Œå› Idle
             _agent.isStopped = true;
             SwitchState(EnemyState.Idle);
             return;
         }
 
-        // ×·×ÙÍæ¼Ò
+        // è¿½è¸ªç©å®¶
         _agent.isStopped = false;
         _agent.speed = _resources.Stats.chaseSpeed;
         _agent.SetDestination(_player.position);
 
-        // ×ªÏòÍæ¼Ò
+        // è½¬å‘ç©å®¶
         Vector3 dir = (_player.position - transform.position);
         dir.y = 0f;
         if (dir.sqrMagnitude > 0.001f)
@@ -225,7 +229,7 @@ public class EnemyAIController : MonoBehaviour
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, _resources.Stats.rotateSpeed * Time.deltaTime);
         }
 
-        // ½øÈë¹¥»÷·¶Î§
+        // è¿›å…¥æ”»å‡»èŒƒå›´
         if (dist <= _resources.Stats.attackRange && _attackData != null)
         {
             _agent.isStopped = true;
@@ -241,11 +245,14 @@ public class EnemyAIController : MonoBehaviour
         SwitchState(EnemyState.Attacking);
         stateTimer = 0f;
 
+        if (_attackData != null)
+            OnAttackStarted?.Invoke(_attackData);
+
         float startup = _attackData.startup;
         float active = _attackData.active;
         float recovery = _attackData.recovery;
 
-        // Startup£ºÇ°Ò¡
+        // Startupï¼šå‰æ‘‡
         float t = 0f;
         while (t < startup)
         {
@@ -253,7 +260,7 @@ public class EnemyAIController : MonoBehaviour
             yield return null;
         }
 
-        // Active£º³öµ¶ + ÉËº¦¼ì²â£¨Õâ¶ÎÊ±¼ä Gizmo Ò²ÏÔÊ¾£©
+        // Activeï¼šå‡ºåˆ€ + ä¼¤å®³æ£€æµ‹ï¼ˆè¿™æ®µæ—¶é—´ Gizmo ä¹Ÿæ˜¾ç¤ºï¼‰
         isAttackActive = true;
         DoHitbox();
 
@@ -265,7 +272,7 @@ public class EnemyAIController : MonoBehaviour
         }
         isAttackActive = false;
 
-        // Recovery£ººóÒ¡
+        // Recoveryï¼šåæ‘‡
         t = 0f;
         while (t < recovery)
         {
@@ -273,7 +280,10 @@ public class EnemyAIController : MonoBehaviour
             yield return null;
         }
 
-        // ¹¥»÷½áÊø£¬½øÈëÀäÈ´
+        if (_attackData != null)
+            OnAttackEnded?.Invoke(_attackData);
+
+        // æ”»å‡»ç»“æŸï¼Œè¿›å…¥å†·å´
         SwitchState(EnemyState.Cooldown);
         stateTimer = 0f;
 
@@ -284,21 +294,21 @@ public class EnemyAIController : MonoBehaviour
     {
         if (stateTimer >= _resources.Stats.attackInterval)
         {
-            // ÀäÈ´½áÊø£¬ÖØĞÂÅĞ¶ÏÊÇ·ñ×·»÷/¹¥»÷
+            // å†·å´ç»“æŸï¼Œé‡æ–°åˆ¤æ–­æ˜¯å¦è¿½å‡»/æ”»å‡»
             SwitchState(EnemyState.Chase);
         }
     }
 
     private void DoHitbox()
     {
-        // ÃüÖĞÇòĞÄÎ»ÖÃ
+        // å‘½ä¸­çƒå¿ƒä½ç½®
         Vector3 center = transform.position
                          + transform.forward * _resources.Stats.attackRange * 0.6f
                          + Vector3.up * hitboxHeightOffset;
 
         float radius = hitboxRadius;
 
-        // ¼ÇÂ¼ÏÂÀ´¸ø Gizmo ÓÃ
+        // è®°å½•ä¸‹æ¥ç»™ Gizmo ç”¨
         lastHitboxCenter = center;
         lastHitboxRadius = radius;
 
@@ -332,7 +342,7 @@ public class EnemyAIController : MonoBehaviour
         enabled = false;
     }
 
-    private void OnDrawGizmosSelected()
+    private void OnDrawGizmos()
     {
         if (!debugDrawHitbox) return;
         if (!isAttackActive) return;

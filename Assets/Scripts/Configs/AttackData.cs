@@ -71,5 +71,9 @@ public class AttackData : ScriptableObject
     public float comboInputOpenTime = 0.0f;   // 允许按键进入下一段连击的开始时间
     public float comboInputCloseTime = 0.0f;  // 结束时间
 
+    [Header("动画绑定（表现层，但跟这招强绑定）")]
+    public AnimationClip animationClip;      // 这一招用的动画
+    public string animatorStateName;         // Animator 里对应的 state 名字，比如 "Sword_Light_1"
+
 
 }

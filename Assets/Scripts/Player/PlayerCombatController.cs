@@ -23,6 +23,8 @@ public class PlayerCombatController : MonoBehaviour
     [SerializeField] private AttackData currentAttack;
     [SerializeField] private float stateTimer;
 
+    public event Action<AttackData> OnAttackStarted;
+    public event Action<AttackData> OnAttackEnded;
     private PlayerResources resources;
     private PlayerMovement movement;
     private Vector3 debugHitboxCenter;
@@ -108,7 +110,9 @@ public class PlayerCombatController : MonoBehaviour
         stateTimer = 0f;
 
         ApplyMovementMultiplier(currentAttack.moveMultiplierStartup);
-        // 以后这里可以加：锁住旋转 / 锁定朝向等
+
+        // 通知表现层：某个 AttackData 正在启动
+        OnAttackStarted?.Invoke(currentAttack);
     }
 
     // =============== 状态机主循环 ===============
@@ -166,14 +170,18 @@ public class PlayerCombatController : MonoBehaviour
 
         ApplyMovementMultiplier(currentAttack.moveMultiplierRecovery);
     }
-
     public void EndAttack()
     {
+        var finishedAttack = currentAttack;
+
         currentState = AttackState.Idle;
         currentAttack = null;
         stateTimer = 0f;
 
         ApplyMovementMultiplier(1f);
+
+        // 通知表现层：这个 Attack 走完了
+        OnAttackEnded?.Invoke(finishedAttack);
     }
 
     // =============== Hitbox 调用（Phase 4 会填充） ===============

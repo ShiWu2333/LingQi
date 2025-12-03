@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(CharacterController))]
@@ -36,6 +37,8 @@ public class PlayerDodgeController : MonoBehaviour
     public bool IsDodging => isDodging;
     public bool IsInvincible => isInvincible;
     public float CurrentCooldown => currentCooldown;
+    public event Action OnDodgeStarted;
+    public event Action OnDodgeEnded;
 
     private void Awake()
     {
@@ -160,8 +163,10 @@ public class PlayerDodgeController : MonoBehaviour
         {
             movement.isMovementLocked = true;
         }
-    }
 
+        // 🔴 新增：广播开始闪避事件
+        OnDodgeStarted?.Invoke();
+    }
 
     private Vector3 GetInputDirection()
     {
@@ -216,6 +221,9 @@ public class PlayerDodgeController : MonoBehaviour
         {
             movement.isMovementLocked = false;
         }
+
+        // 🔴 新增：广播结束闪避事件
+        OnDodgeEnded?.Invoke();
     }
 
     private void SetIFrameColor()

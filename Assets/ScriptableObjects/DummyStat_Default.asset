@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2674e6468ab9990409e85880cde62ed3, type: 3}
+  m_Name: DummyStat_Default
+  m_EditorClassIdentifier: 
+  maxHP: 500
+  maxPoise: 500
+  poiseRegenDelay: 10
+  poiseRegenPerSecond: 20
+  breakDuration: 1
+  moveSpeed: 0
+  chaseSpeed: 0
+  rotateSpeed: 0
+  detectionRange: 0
+  attackRange: 0
+  attackInterval: 500
+  defaultAttack: {fileID: 11400000, guid: 68f0fa0735406db47925cdce891850e0, type: 2}
+  heavyAttack: {fileID: 0}
+  impactProfile: {fileID: 11400000, guid: 346378d05ca706d46a020b621d1f80dc, type: 2}
+  hitFlashColor: {r: 1, g: 1, b: 1, a: 1}
+  hitFlashDuration: 0.1

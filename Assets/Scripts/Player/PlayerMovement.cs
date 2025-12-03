@@ -22,6 +22,8 @@ public class PlayerMovement : MonoBehaviour
 
     [HideInInspector] public float moveSpeedMultiplier = 1f; // 新增字段，默认1
     [HideInInspector] public bool isMovementLocked = false;
+    public float CurrentPlanarSpeed { get; private set; }
+
 
     private float CurrentMoveSpeed
     {
@@ -81,6 +83,10 @@ public class PlayerMovement : MonoBehaviour
         }
 
         Vector3 move = moveDir * CurrentMoveSpeed * moveSpeedMultiplier;
+
+        // 记录水平方向速度，给动画用（不影响任何逻辑）
+        Vector3 planar = new Vector3(move.x, 0f, move.z);
+        CurrentPlanarSpeed = planar.magnitude;
 
         if (useGravity)
         {

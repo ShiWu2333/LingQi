@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using UnityEngine;
 
 [DisallowMultipleComponent]
@@ -16,10 +16,11 @@ public class PlayerResources : MonoBehaviour
     private PlayerDodgeController dodge;
     private FlashOnHit _flashOnHit;
 
-    // ÊÂ¼ş£ºÒÔºó UI / ÆäËûÏµÍ³¿ÉÒÔ¶©ÔÄ
+    // äº‹ä»¶ï¼šä»¥å UI / å…¶ä»–ç³»ç»Ÿå¯ä»¥è®¢é˜…
     public event Action<float, float> OnHPChanged;
     public event Action<float, float> OnStaminaChanged;
     public event Action<float, float> OnManaChanged;
+    public event Action<float> OnDamaged;  // å—åˆ°äº†å¤šå°‘ä¼¤å®³ï¼ˆæœ€ç»ˆç”Ÿæ•ˆä¼¤å®³ï¼‰
     public event Action OnDeath;
 
     public float CurrentHP => currentHP;
@@ -40,7 +41,7 @@ public class PlayerResources : MonoBehaviour
             return;
         }
         dodge = GetComponent<PlayerDodgeController>();
-        _flashOnHit = GetComponentInChildren<FlashOnHit>();   // ĞÂÔö
+        _flashOnHit = GetComponentInChildren<FlashOnHit>();   // æ–°å¢
         InitFromConfig();
     }
 
@@ -53,7 +54,7 @@ public class PlayerResources : MonoBehaviour
         TickManaRegen(dt);
     }
 
-    // ³õÊ¼»¯
+    // åˆå§‹åŒ–
     public void InitFromConfig()
     {
         if (stats == null) return;
@@ -73,12 +74,12 @@ public class PlayerResources : MonoBehaviour
         OnManaChanged?.Invoke(currentMana, MaxMana);
     }
 
-    // HP ²Ù×÷
+    // HP æ“ä½œ
     public void TakeDamage(float amount)
     {
         if (IsDead || amount <= 0f) return;
 
-        // ÉÁ±Ü i-frame£º²»ÊÜÉË
+        // é—ªé¿ i-frameï¼šä¸å—ä¼¤
         if (dodge != null && dodge.IsInvincible)
         {
             // Debug.Log("[PlayerResources] Damage ignored due to i-frame.");
@@ -86,10 +87,15 @@ public class PlayerResources : MonoBehaviour
         }
 
         currentHP -= amount;
+
+        // ğŸ”´ æ–°å¢ï¼šçœŸæ­£æ‰£è¡€æ‰å¹¿æ’­å—ä¼¤äº‹ä»¶
+        OnDamaged?.Invoke(amount);
+
         if (_flashOnHit != null && amount > 0f)
         {
             _flashOnHit.Trigger();
         }
+
         if (currentHP <= 0f)
         {
             currentHP = 0f;
@@ -114,10 +120,10 @@ public class PlayerResources : MonoBehaviour
     {
         Debug.Log("[PlayerResources] Player died.", this);
         OnDeath?.Invoke();
-        // ¸´»îÂß¼­Ö®ºóÔÙ¼Ó
+        // å¤æ´»é€»è¾‘ä¹‹åå†åŠ 
     }
 
-    // Stamina ²Ù×÷
+    // Stamina æ“ä½œ
     public bool TrySpendStamina(float amount)
     {
         if (amount <= 0f) return true;
@@ -151,7 +157,7 @@ public class PlayerResources : MonoBehaviour
         OnStaminaChanged?.Invoke(currentStamina, MaxStamina);
     }
 
-    // Mana ²Ù×÷
+    // Mana æ“ä½œ
     public bool TrySpendMana(float amount)
     {
         if (amount <= 0f) return true;
@@ -177,6 +183,6 @@ public class PlayerResources : MonoBehaviour
         OnManaChanged?.Invoke(currentMana, MaxMana);
     }
 
-    // ±©Â¶Ò»¸ö»ñÈ¡ÅäÖÃµÄÖ»¶Á½Ó¿Ú£¬¸ø Movement/Combat ÓÃ
+    // æš´éœ²ä¸€ä¸ªè·å–é…ç½®çš„åªè¯»æ¥å£ï¼Œç»™ Movement/Combat ç”¨
     public PlayerStatsConfig StatsConfig => stats;
 }
