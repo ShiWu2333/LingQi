@@ -20,6 +20,15 @@ public class PlayerStatsConfig : ScriptableObject
     public float maxMana = 50f;
     public float manaRegenPerSecond = 3f;
 
+    [Header("Poise / 韧性")]
+    public float maxPoise = 100f;
+    public float poiseRegenDelay = 2f;
+    public float poiseRegenPerSecond = 30f;
+    public float breakDuration = 2f;
+
+    [Header("Impact / 冲击力反应表")]
+    public ImpactProfile impactProfile;
+
     [Header("Dodge")]
     public float dodgeDistance = 3f;
     public float dodgeDuration = 0.22f;

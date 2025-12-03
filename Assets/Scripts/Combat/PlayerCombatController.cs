@@ -178,7 +178,6 @@ public class PlayerCombatController : MonoBehaviour
     // =============== Hitbox 调用（Phase 4 会填充） ===============
     private void DoHitbox()
     {
-
         if (currentAttack == null)
         {
             Debug.LogWarning("[Combat] DoHitbox called but currentAttack is null.");
@@ -190,16 +189,17 @@ public class PlayerCombatController : MonoBehaviour
         Vector3 center = origin + transform.forward * currentAttack.hitRange;
         float radius = currentAttack.hitRadius;
 
-        // 打印一下当前参数
+        // Debug 可视化
         Debug.Log($"[Combat] DoHitbox: attack={currentAttack.attackId}, center={center}, radius={radius}");
         debugHitboxCenter = center;
         debugHitboxRadius = radius;
+
         // 检测敌人
         Collider[] hits = Physics.OverlapSphere(
             center,
             radius,
             enemyLayers,
-            QueryTriggerInteraction.Collide   // 注意这里：允许 Trigger 也被打到
+            QueryTriggerInteraction.Collide // 允许 Trigger
         );
 
         Debug.Log($"[Combat] OverlapSphere hit count = {hits.Length}");
@@ -210,23 +210,26 @@ public class PlayerCombatController : MonoBehaviour
         {
             Debug.Log($"[Combat] Hit collider: {col.name}, layer={LayerMask.LayerToName(col.gameObject.layer)}");
 
-            if (col.TryGetComponent(out Health health))
+            if (col.TryGetComponent(out EnemyResources enemyRes))
             {
                 // 使用 Collider 提供的最近点作为命中点，更贴合模型表面
                 Vector3 hitPoint = col.ClosestPoint(debugHitboxCenter);
-                health.TakeDamage(currentAttack.damage, hitPoint);
+
+                // 这里调用新的敌人资源脚本
+                enemyRes.TakeDamage(currentAttack.damage, hitPoint);
+
                 damageCount++;
             }
             else
             {
-                Debug.Log($"[Combat] Collider {col.name} has no Health.");
+                Debug.Log($"[Combat] Collider {col.name} has no EnemyResources.");
             }
         }
 
         Debug.Log($"[Combat] Damage applied to {damageCount} targets.");
     }
 
-
+    
 
     // =============== 工具方法 ===============
     private void ApplyMovementMultiplier(float multiplier)

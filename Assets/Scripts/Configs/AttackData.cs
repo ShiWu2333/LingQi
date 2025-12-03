@@ -55,4 +55,19 @@ public class AttackData : ScriptableObject
 
     [Tooltip("在 Recovery 末尾多少秒可以预输入下一个攻击（连击用）")]
     public float bufferWindow = 0.15f;
+
+    [Header("Poise / Impact")]
+    public int poiseDamage = 0;          // 每次攻击削韧量
+    public ImpactGrade impact = ImpactGrade.Small; // 冲击力等级
+
+    [Header("Combo (Soft Combo)")]
+    public string comboGroupId;          // 例如 "Sword_L", "Greatsword_L"
+    public int comboStepIndex = 0;       // 0 = 第一段，1 = 第二段...
+
+    [Tooltip("下一段连击的 AttackData（没有就留空）")]
+    public AttackData nextCombo;         // 连段链表结构
+
+    [Header("Combo Input Window (相对 Attack timeline 时间)")]
+    public float comboInputOpenTime = 0.0f;   // 允许按键进入下一段连击的开始时间
+    public float comboInputCloseTime = 0.0f;  // 结束时间
 }

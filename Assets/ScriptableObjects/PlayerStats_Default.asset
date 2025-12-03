@@ -19,6 +19,11 @@ MonoBehaviour:
   staminaRegenDelayAfterUse: 0.4
   maxMana: 50
   manaRegenPerSecond: 3
+  maxPoise: 100
+  poiseRegenDelay: 2
+  poiseRegenPerSecond: 30
+  breakDuration: 2
+  impactProfile: {fileID: 11400000, guid: 44d38290032ebcc4e8b7fc70e9806849, type: 2}
   dodgeDistance: 3
   dodgeDuration: 0.22
   dodgeStaminaCost: 20

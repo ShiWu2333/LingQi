@@ -1,256 +1,258 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
 
-public enum EnemyState
-{
-    Idle,
-    Chasing,
-    Attacking,
-    Recovery
-}
-
-[DisallowMultipleComponent]
 [RequireComponent(typeof(NavMeshAgent))]
+[RequireComponent(typeof(EnemyResources))]
 public class EnemyAIController : MonoBehaviour
 {
+    private enum EnemyState
+    {
+        Idle,
+        Chase,
+        Attacking,
+        Cooldown
+    }
+
     [Header("Config")]
-    [SerializeField] private AttackData attackData;   // ★ 怪物攻击数据
-    [SerializeField] private float detectRange = 12f; // 发现玩家距离
-    [SerializeField] private float stopDistance = 2.2f; // 靠近到这个距离就不再继续贴脸推进
-    [SerializeField] private float attackCooldown = 1.0f; // 每次攻击之后的额外冷却
-
-    [Header("Hitbox")]
-    [SerializeField] private LayerMask playerLayers;
+    [SerializeField] private LayerMask playerLayer;   // 只检测玩家
+    [SerializeField] private float hitboxRadius = 1.0f;
     [SerializeField] private float hitboxHeightOffset = 1.0f;
+    [SerializeField] private bool debugDrawHitbox = false;
 
-    [Header("Debug (ReadOnly)")]
-    [SerializeField] private EnemyState state;
+    [Header("Runtime (ReadOnly)")]
+    [SerializeField] private EnemyState state = EnemyState.Idle;
     [SerializeField] private float stateTimer;
-    [SerializeField] private bool isAttacking;
-    [SerializeField] private bool debugDrawHitbox = true;
 
-    private Transform player;
-    private NavMeshAgent agent;
-    private Health health;
+    private NavMeshAgent _agent;
+    private EnemyResources _resources;
+    private Transform _player;
+    private AttackData _attackData;   // 目前只用一个默认攻击
 
-    private float attackCooldownTimer;
-    private bool hasDealtDamageThisAttack;
-
-    // debug hitbox
-    private Vector3 debugHitCenter;
-    private float debugHitRadius;
+    // 攻击生效阶段标记 + 最近一次 hitbox 数据
+    private bool isAttackActive;
+    private Vector3 lastHitboxCenter;
+    private float lastHitboxRadius;
 
     private void Awake()
     {
-        agent = GetComponent<NavMeshAgent>();
-        health = GetComponent<Health>();
+        _agent = GetComponent<NavMeshAgent>();
+        _resources = GetComponent<EnemyResources>();
 
-        var pr = FindFirstObjectByType<PlayerResources>();
-        if (pr != null)
+        if (_resources.Stats == null)
         {
-            player = pr.transform;
+            Debug.LogError("[EnemyAI] EnemyStatsConfig is missing on EnemyResources.", this);
+            enabled = false;
+            return;
+        }
+
+        _attackData = _resources.Stats.defaultAttack;
+        if (_attackData == null)
+        {
+            Debug.LogWarning("[EnemyAI] defaultAttack is not assigned in EnemyStatsConfig.", this);
+        }
+
+        // NavMeshAgent 基础参数从 stats 读
+        _agent.speed = _resources.Stats.chaseSpeed;
+        _agent.angularSpeed = _resources.Stats.rotateSpeed;
+        _agent.stoppingDistance = _resources.Stats.attackRange * 0.8f; // 稍微早一点停下
+    }
+
+    private void Start()
+    {
+        // 自动找玩家（要求 Player 物体 Tag = "Player"）
+        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+        if (playerObj != null)
+        {
+            _player = playerObj.transform;
         }
         else
         {
-            Debug.LogWarning("[EnemyAI] No PlayerResources found in scene.", this);
+            Debug.LogWarning("[EnemyAI] No object with Tag=Player found.", this);
         }
 
-        if (attackData == null)
+        state = EnemyState.Idle;
+        stateTimer = 0f;
+
+        // 敌人死亡时禁用 AI
+        _resources.OnDeath += HandleDeath;
+    }
+
+    private void OnDestroy()
+    {
+        if (_resources != null)
         {
-            Debug.LogError("[EnemyAI] AttackData not assigned!", this);
+            _resources.OnDeath -= HandleDeath;
         }
     }
 
     private void Update()
     {
-        if (health != null && health.IsDead)
-        {
-            agent.isStopped = true;
-            return;
-        }
+        if (_player == null || !_agent.enabled) return;
 
         float dt = Time.deltaTime;
         stateTimer += dt;
-
-        // 攻击冷却计时
-        if (attackCooldownTimer > 0f)
-        {
-            attackCooldownTimer -= dt;
-            if (attackCooldownTimer < 0f) attackCooldownTimer = 0f;
-        }
 
         switch (state)
         {
             case EnemyState.Idle:
                 TickIdle();
                 break;
-            case EnemyState.Chasing:
-                TickChasing();
+            case EnemyState.Chase:
+                TickChase();
                 break;
             case EnemyState.Attacking:
-                TickAttacking();
+                // 攻击过程用协程控制，不在这里更新
                 break;
-            case EnemyState.Recovery:
-                TickRecovery();
+            case EnemyState.Cooldown:
+                TickCooldown();
                 break;
         }
     }
 
     private void TickIdle()
     {
-        if (!player) return;
-
-        float dist = Vector3.Distance(transform.position, player.position);
-        if (dist <= detectRange)
+        float dist = Vector3.Distance(transform.position, _player.position);
+        if (dist <= _resources.Stats.detectionRange)
         {
-            state = EnemyState.Chasing;
-            stateTimer = 0f;
-            agent.isStopped = false;
+            SwitchState(EnemyState.Chase);
         }
     }
 
-    private void TickChasing()
+    private void TickChase()
     {
-        if (!player || attackData == null) return;
+        float dist = Vector3.Distance(transform.position, _player.position);
 
-        float dist = Vector3.Distance(transform.position, player.position);
-
-        // 移动到玩家附近
-        if (dist > stopDistance)
+        if (dist > _resources.Stats.detectionRange * 1.5f)
         {
-            agent.isStopped = false;
-            agent.SetDestination(player.position);
-        }
-        else
-        {
-            agent.isStopped = true;
+            // 跑远了，回 Idle
+            _agent.isStopped = true;
+            SwitchState(EnemyState.Idle);
+            return;
         }
 
-        // 距离足够近 + 攻击不在冷却中 → 开始攻击
-        if (dist <= attackData.hitRange && attackCooldownTimer <= 0f)
+        // 追踪玩家
+        _agent.isStopped = false;
+        _agent.speed = _resources.Stats.chaseSpeed;
+        _agent.SetDestination(_player.position);
+
+        // 转向玩家
+        Vector3 dir = (_player.position - transform.position);
+        dir.y = 0f;
+        if (dir.sqrMagnitude > 0.001f)
         {
-            BeginAttack();
+            Quaternion targetRot = Quaternion.LookRotation(dir, Vector3.up);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, _resources.Stats.rotateSpeed * Time.deltaTime);
+        }
+
+        // 进入攻击范围
+        if (dist <= _resources.Stats.attackRange && _attackData != null)
+        {
+            _agent.isStopped = true;
+            StartCoroutine(CoDoAttack());
         }
     }
 
-    private void BeginAttack()
+    private IEnumerator CoDoAttack()
     {
-        if (attackData == null) return;
-
-        state = EnemyState.Attacking;
+        SwitchState(EnemyState.Attacking);
         stateTimer = 0f;
-        isAttacking = true;
-        hasDealtDamageThisAttack = false;
 
-        // 停止 NavMesh 移动
-        agent.isStopped = true;
+        float startup = _attackData.startup;
+        float active = _attackData.active;
+        float recovery = _attackData.recovery;
 
-        // 朝玩家转向（简单版）
-        if (player)
+        // Startup：前摇
+        float t = 0f;
+        while (t < startup)
         {
-            Vector3 dir = player.position - transform.position;
-            dir.y = 0f;
-            if (dir.sqrMagnitude > 0.01f)
-                transform.rotation = Quaternion.LookRotation(dir, Vector3.up);
+            t += Time.deltaTime;
+            yield return null;
         }
+
+        // Active：出刀 + 伤害检测（这段时间 Gizmo 也显示）
+        isAttackActive = true;
+        DoHitbox();
+
+        t = 0f;
+        while (t < active)
+        {
+            t += Time.deltaTime;
+            yield return null;
+        }
+        isAttackActive = false;
+
+        // Recovery：后摇
+        t = 0f;
+        while (t < recovery)
+        {
+            t += Time.deltaTime;
+            yield return null;
+        }
+
+        // 攻击结束，进入冷却
+        SwitchState(EnemyState.Cooldown);
+        stateTimer = 0f;
     }
 
-    private void TickAttacking()
+    private void TickCooldown()
     {
-        if (attackData == null) return;
-
-        float windup = attackData.startup;
-        float active = attackData.active;
-
-        if (stateTimer < windup)
+        if (stateTimer >= _resources.Stats.attackInterval)
         {
-            // 前摇阶段：啥也不做，让敌人定在那里
-        }
-        else if (stateTimer < windup + active)
-        {
-            // Active 阶段：只在第一次进入时打一次 hitbox
-            if (!hasDealtDamageThisAttack)
-            {
-                DoHitbox();
-                hasDealtDamageThisAttack = true;
-            }
-        }
-        else
-        {
-            // 进入 Recovery
-            state = EnemyState.Recovery;
-            stateTimer = 0f;
-        }
-    }
-
-    private void TickRecovery()
-    {
-        if (attackData == null) return;
-
-        float recovery = attackData.recovery;
-
-        if (stateTimer >= recovery)
-        {
-            isAttacking = false;
-            agent.isStopped = false;
-
-            // 设置攻击冷却
-            attackCooldownTimer = attackCooldown;
-
-            // 回到追击
-            state = EnemyState.Chasing;
-            stateTimer = 0f;
+            // 冷却结束，重新判断是否追击/攻击
+            SwitchState(EnemyState.Chase);
         }
     }
 
     private void DoHitbox()
     {
-        if (attackData == null) return;
+        // 命中球心位置
+        Vector3 center = transform.position
+                         + transform.forward * _resources.Stats.attackRange * 0.6f
+                         + Vector3.up * hitboxHeightOffset;
 
-        Vector3 origin = transform.position + Vector3.up * hitboxHeightOffset;
-        Vector3 center = origin + transform.forward * attackData.hitRange;
-        float radius = attackData.hitRadius;
+        float radius = hitboxRadius;
 
-        debugHitCenter = center;
-        debugHitRadius = radius;
+        // 记录下来给 Gizmo 用
+        lastHitboxCenter = center;
+        lastHitboxRadius = radius;
 
-        Collider[] hits = Physics.OverlapSphere(
-            center,
-            radius,
-            playerLayers,
-            QueryTriggerInteraction.Collide);
+        Collider[] hits = Physics.OverlapSphere(center, radius, playerLayer, QueryTriggerInteraction.Ignore);
 
-        int hitCount = 0;
-
-        foreach (var col in hits)
+        if (debugDrawHitbox)
         {
-            if (col.TryGetComponent(out PlayerResources pr))
+            Debug.Log($"[EnemyAI] DoHitbox: hits={hits.Length}");
+        }
+
+        for (int i = 0; i < hits.Length; i++)
+        {
+            var col = hits[i];
+            if (col.TryGetComponent(out PlayerResources playerRes))
             {
-                pr.TakeDamage(attackData.damage);
-                hitCount++;
+                playerRes.TakeDamage(_attackData.damage);
             }
         }
-
-        // Debug.Log($"[EnemyAI] Attack hit {hitCount} targets.");
     }
 
-    private void OnDrawGizmos()
+    private void SwitchState(EnemyState newState)
+    {
+        state = newState;
+        stateTimer = 0f;
+    }
+
+    private void HandleDeath()
+    {
+        _agent.isStopped = true;
+        _agent.enabled = false;
+        enabled = false;
+    }
+
+    private void OnDrawGizmosSelected()
     {
         if (!debugDrawHitbox) return;
-        if (!Application.isPlaying) return;
-        if (attackData == null) return;
+        if (!isAttackActive) return;
 
-        // 画当前 attackData 的判定范围（方便调）
-        if (state == EnemyState.Attacking)
-        {
-            Gizmos.color = Color.magenta;
-            Gizmos.DrawWireSphere(debugHitCenter, debugHitRadius);
-        }
-
-        // 在场景中常驻显示“潜在攻击范围”
-        Gizmos.color = new Color(1f, 0f, 1f, 0.2f);
-        Vector3 origin = transform.position + Vector3.up * 1.0f;
-        Vector3 idealCenter = origin + transform.forward * (attackData != null ? attackData.hitRange : 2f);
-        Gizmos.DrawWireSphere(idealCenter, attackData != null ? attackData.hitRadius : 1.2f);
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(lastHitboxCenter, lastHitboxRadius);
     }
 }
