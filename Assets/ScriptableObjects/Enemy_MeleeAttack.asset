@@ -36,3 +36,5 @@ MonoBehaviour:
   nextCombo: {fileID: 0}
   comboInputOpenTime: 0
   comboInputCloseTime: 0
+  animationClip: {fileID: 7400000, guid: d20a6692c13800d479789fab66ad54db, type: 2}
+  animatorStateName: EnemyAttack

@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using System;
 
 [DisallowMultipleComponent]
@@ -13,7 +13,7 @@ public class PlayerCombatController : MonoBehaviour
 
     [Header("Hitbox")]
     [SerializeField] private LayerMask enemyLayers;
-    [SerializeField] private float hitboxHeightOffset = 1f; // ´Ó½ÇÉ«ÖĞĞÄÍùÉÏÌ§Ò»µã£¬·ÀÖ¹ÌùµØ
+    [SerializeField] private float hitboxHeightOffset = 1f; // ä»è§’è‰²ä¸­å¿ƒå¾€ä¸ŠæŠ¬ä¸€ç‚¹ï¼Œé˜²æ­¢è´´åœ°
 
     [Header("Debug")]
     [SerializeField] private bool debugDrawHitbox = true;
@@ -25,12 +25,17 @@ public class PlayerCombatController : MonoBehaviour
 
     public event Action<AttackData> OnAttackStarted;
     public event Action<AttackData> OnAttackEnded;
+
     private PlayerResources resources;
     private PlayerMovement movement;
+    private PlayerDodgeController dodge;          // â­ æ–°å¢ï¼šç”¨æ¥åˆ¤æ–­ DashAttack çª—å£
+    private CharacterController controller;       // â­ ç”¨äº stepForward ä½ç§»
+    private bool dashAttackQueued;   // â­ è®°å½•â€œé—ªé¿ä¸­æŒ‰äº†è½»æ”»ï¼Œè¦åœ¨ç»“æŸåæ”¾ DashAttackâ€
+
     private Vector3 debugHitboxCenter;
     private float debugHitboxRadius;
 
-    // ¶ÔÍâÖ»¶ÁÊôĞÔ£¬¸ø DebugOverlay ÓÃ
+    // å¯¹å¤–åªè¯»å±æ€§ï¼Œç»™ DebugOverlay ç”¨
     public AttackState CurrentState => currentState;
     public float CurrentStateTimer => stateTimer;
     public AttackData CurrentAttack => currentAttack;
@@ -39,6 +44,8 @@ public class PlayerCombatController : MonoBehaviour
     {
         resources = GetComponent<PlayerResources>();
         movement = GetComponent<PlayerMovement>();
+        dodge = GetComponent<PlayerDodgeController>();   // â­
+        controller = GetComponent<CharacterController>();     // â­
 
         if (weaponConfig == null)
         {
@@ -54,6 +61,11 @@ public class PlayerCombatController : MonoBehaviour
         {
             Debug.LogError("[PlayerCombatController] PlayerMovement not found!", this);
         }
+
+        if (controller == null)
+        {
+            Debug.LogWarning("[PlayerCombatController] CharacterController not found, stepForward will be disabled.", this);
+        }
     }
 
     private void Update()
@@ -61,22 +73,47 @@ public class PlayerCombatController : MonoBehaviour
         if (resources != null && resources.IsDead)
             return;
 
+        TryConsumeQueuedDashAttack();   // â­ å…ˆçœ‹çœ‹è¦ä¸è¦åœ¨é—ªé¿ç»“æŸåæ”¾ DashAttack
         HandleAttackInput();
         TickAttackState(Time.deltaTime);
     }
 
-    // =============== ÊäÈë´¦Àí ===============
+    // =============== è¾“å…¥å¤„ç† ===============
     private void HandleAttackInput()
     {
         if (weaponConfig == null || resources == null)
             return;
 
         if (currentState != AttackState.Idle)
-            return; // ¼òµ¥°æ£º¹¥»÷ÖĞ²»½ÓÊÜĞÂÊäÈë£¨Ö®ºó¿ÉÒÔ¼Ó buffer£©
+            return; // ç®€å•ç‰ˆï¼šæ”»å‡»ä¸­ä¸æ¥å—æ–°è¾“å…¥ï¼ˆä¹‹åå¯ä»¥åŠ  bufferï¼‰
 
         if (Input.GetKeyDown(lightKey))
         {
-            TryStartAttack(weaponConfig.lightAttack);
+            AttackData attackToUse = null;
+
+            bool hasDashAttack = (weaponConfig.dashAttack != null && dodge != null);
+
+            if (hasDashAttack)
+            {
+                // é—ªé¿è¿‡ç¨‹ä¸­æŒ‰ä¸‹ï¼šæ’é˜Ÿï¼Œç­‰ç»“æŸåå†æ”¾
+                if (dodge.IsDodging)
+                {
+                    dashAttackQueued = true;
+                    return;
+                }
+
+                // é—ªé¿åˆšç»“æŸã€è¿˜åœ¨ dash çª—å£å†…ï¼šç›´æ¥æ”¾ dashAttack
+                if (dodge.IsInDashAttackWindow)
+                {
+                    attackToUse = weaponConfig.dashAttack;
+                }
+            }
+
+            // ä¸åœ¨çª—å£æˆ–æ²¡ dashAttackï¼šæ™®é€š lightAttack
+            if (attackToUse == null)
+                attackToUse = weaponConfig.lightAttack;
+
+            TryStartAttack(attackToUse);
         }
         else if (Input.GetKeyDown(heavyKey))
         {
@@ -84,12 +121,46 @@ public class PlayerCombatController : MonoBehaviour
         }
     }
 
+    private void TryConsumeQueuedDashAttack()
+    {
+        if (!dashAttackQueued)
+            return;
+        if (weaponConfig == null || weaponConfig.dashAttack == null)
+        {
+            dashAttackQueued = false;
+            return;
+        }
+        if (dodge == null)
+        {
+            dashAttackQueued = false;
+            return;
+        }
+
+        // è¿˜åœ¨é—ªé¿ä¸­ â†’ ä¸èƒ½èµ·æ‰‹
+        if (dodge.IsDodging)
+            return;
+
+        // çª—å£å·²ç»è¿‡äº† â†’ ç›´æ¥ä¸¢å¼ƒè¿™æ¬¡è¯·æ±‚
+        if (!dodge.IsInDashAttackWindow)
+        {
+            dashAttackQueued = false;
+            return;
+        }
+
+        // åªèƒ½åœ¨æ”»å‡» Idle æ—¶èµ·æ‰‹
+        if (currentState != AttackState.Idle)
+            return;
+
+        dashAttackQueued = false;
+        TryStartAttack(weaponConfig.dashAttack);
+    }
+
     private void TryStartAttack(AttackData attack)
     {
         if (attack == null)
             return;
 
-        // ×ÊÔ´¼ì²é
+        // èµ„æºæ£€æŸ¥
         if (!resources.TrySpendStamina(attack.staminaCost))
         {
             Debug.Log("[PlayerCombatController] Not enough stamina for attack: " + attack.attackId);
@@ -99,23 +170,23 @@ public class PlayerCombatController : MonoBehaviour
         if (!resources.TrySpendMana(attack.manaCost))
         {
             Debug.Log("[PlayerCombatController] Not enough mana for attack: " + attack.attackId);
-            // ÌåÁ¦ÒÑ¾­¿ÛÁË£¬Òª²»ÒªÍË»Ø£¿¿´ÄãÉè¼Æ£¬Õâ°æÏÈ²»ÍË
-            // ¿ÉÒÔ¸Ä³É£ºÏÈ¼ì²é Mana£¬ÔÙ¿Û Stamina
+            // ä½“åŠ›å·²ç»æ‰£äº†ï¼Œè¦ä¸è¦é€€å›ï¼Ÿçœ‹ä½ è®¾è®¡ï¼Œè¿™ç‰ˆå…ˆä¸é€€
+            // å¯ä»¥æ”¹æˆï¼šå…ˆæ£€æŸ¥ Manaï¼Œå†æ‰£ Stamina
             return;
         }
 
-        // ÕæÕı¿ªÊ¼¹¥»÷
+        // çœŸæ­£å¼€å§‹æ”»å‡»
         currentAttack = attack;
         currentState = AttackState.Startup;
         stateTimer = 0f;
 
         ApplyMovementMultiplier(currentAttack.moveMultiplierStartup);
 
-        // Í¨Öª±íÏÖ²ã£ºÄ³¸ö AttackData ÕıÔÚÆô¶¯
+        // é€šçŸ¥è¡¨ç°å±‚ï¼šæŸä¸ª AttackData æ­£åœ¨å¯åŠ¨
         OnAttackStarted?.Invoke(currentAttack);
     }
 
-    // =============== ×´Ì¬»úÖ÷Ñ­»· ===============
+    // =============== çŠ¶æ€æœºä¸»å¾ªç¯ ===============
     private void TickAttackState(float dt)
     {
         if (currentState == AttackState.Idle || currentAttack == null)
@@ -126,6 +197,7 @@ public class PlayerCombatController : MonoBehaviour
         switch (currentState)
         {
             case AttackState.Startup:
+                UpdateStartup(dt);   // â­ è¿™é‡Œå®ç° stepForward
                 if (stateTimer >= currentAttack.startup)
                     EnterActive();
                 break;
@@ -134,7 +206,7 @@ public class PlayerCombatController : MonoBehaviour
                 if (stateTimer >= currentAttack.active)
                     EnterRecovery();
                 else
-                    UpdateActive(dt); // Èç¹ûÒªÔÚÕû¶Î active ÆÚ¼ä³ÖĞøÅĞ¶¨£¬¿ÉÒÔÔÚÕâÀï×ö
+                    UpdateActive(dt);
                 break;
 
             case AttackState.Recovery:
@@ -144,7 +216,31 @@ public class PlayerCombatController : MonoBehaviour
         }
     }
 
-    // =============== ¸÷½×¶ÎÇĞ»» ===============
+    // =============== å„é˜¶æ®µ ===============
+    private void UpdateStartup(float dt)
+    {
+        // â­ é€šç”¨çš„ stepForward é€»è¾‘ï¼šä»»ä½•è®¾ç½®äº† stepForward çš„æ”»å‡»éƒ½ä¼šåœ¨å‰ stepDuration ç§’å‘å‰å†²
+        if (currentAttack == null || controller == null)
+            return;
+
+        if (!currentAttack.stepForward)
+            return;
+
+        if (currentAttack.stepDuration <= 0f || currentAttack.stepDistance <= 0f)
+            return;
+
+        // åœ¨ Startup çš„å‰ stepDuration ç§’åšä½ç§»
+        if (stateTimer <= currentAttack.stepDuration)
+        {
+            float speed = currentAttack.stepDistance / currentAttack.stepDuration;
+            Vector3 dir = transform.forward;
+            dir.y = 0f;
+            dir.Normalize();
+
+            controller.Move(dir * speed * dt);
+        }
+    }
+
     private void EnterActive()
     {
         currentState = AttackState.Active;
@@ -152,14 +248,13 @@ public class PlayerCombatController : MonoBehaviour
 
         ApplyMovementMultiplier(currentAttack.moveMultiplierActive);
 
-        // ½øÈë Active Ë²¼ä×öÒ»´ÎÅĞ¶¨
+        // è¿›å…¥ Active ç¬é—´åšä¸€æ¬¡åˆ¤å®š
         DoHitbox();
     }
 
     private void UpdateActive(float dt)
     {
-        // Èç¹ûÄãÏëÔÚ active È«³ÌÁ¬Ğø¼ì²â£¬¿ÉÒÔ°Ñ DoHitbox ·ÅÔÚÕâÀï¶ø²»ÊÇ EnterActive
-        // ÀıÈç£ºÃ¿Ö¡¼ì²âÒ»´Î hitbox
+        // å¦‚æœä½ æƒ³åœ¨ active å…¨ç¨‹è¿ç»­æ£€æµ‹ï¼Œå¯ä»¥æŠŠ DoHitbox æ”¾åœ¨è¿™é‡Œ
         // DoHitbox();
     }
 
@@ -170,6 +265,7 @@ public class PlayerCombatController : MonoBehaviour
 
         ApplyMovementMultiplier(currentAttack.moveMultiplierRecovery);
     }
+
     public void EndAttack()
     {
         var finishedAttack = currentAttack;
@@ -180,11 +276,11 @@ public class PlayerCombatController : MonoBehaviour
 
         ApplyMovementMultiplier(1f);
 
-        // Í¨Öª±íÏÖ²ã£ºÕâ¸ö Attack ×ßÍêÁË
+        // é€šçŸ¥è¡¨ç°å±‚ï¼šè¿™ä¸ª Attack èµ°å®Œäº†
         OnAttackEnded?.Invoke(finishedAttack);
     }
 
-    // =============== Hitbox µ÷ÓÃ£¨Phase 4 »áÌî³ä£© ===============
+    // =============== Hitbox ===============
     private void DoHitbox()
     {
         if (currentAttack == null)
@@ -193,63 +289,42 @@ public class PlayerCombatController : MonoBehaviour
             return;
         }
 
-        // ¼ÆËãÅĞ¶¨ÇòĞÄÎ»ÖÃ
         Vector3 origin = transform.position + Vector3.up * hitboxHeightOffset;
         Vector3 center = origin + transform.forward * currentAttack.hitRange;
         float radius = currentAttack.hitRadius;
 
-        // Debug ¿ÉÊÓ»¯
-        Debug.Log($"[Combat] DoHitbox: attack={currentAttack.attackId}, center={center}, radius={radius}");
         debugHitboxCenter = center;
         debugHitboxRadius = radius;
 
-        // ¼ì²âµĞÈË
         Collider[] hits = Physics.OverlapSphere(
             center,
             radius,
             enemyLayers,
-            QueryTriggerInteraction.Collide // ÔÊĞí Trigger
+            QueryTriggerInteraction.Collide
         );
-
-        Debug.Log($"[Combat] OverlapSphere hit count = {hits.Length}");
 
         int damageCount = 0;
 
         foreach (var col in hits)
         {
-            Debug.Log($"[Combat] Hit collider: {col.name}, layer={LayerMask.LayerToName(col.gameObject.layer)}");
-
             if (col.TryGetComponent(out EnemyResources enemyRes))
             {
                 Vector3 hitPoint = col.ClosestPoint(debugHitboxCenter);
 
-                // 1£©¿ÛÑª + Æ®×Ö + ÉÁ°×
                 enemyRes.TakeDamage(currentAttack.damage, hitPoint);
 
-                // 2£©³å»÷Á¦ + ÈÍĞÔ + Ó²Ö±
                 if (col.TryGetComponent(out EnemyPoiseController poise))
                 {
-                    // ÕâÀïÏÈ¼òµ¥ÓÃ Default ÉÏÏÂÎÄ£¬Ö®ºóÄã¿ÉÒÔ¸ù¾İµĞÈËµ±Ç°×´Ì¬´«²»Í¬µÄ ImpactContext
                     var reaction = poise.ApplyHit(currentAttack, ImpactContext.Default);
-
-                    // Ä¿Ç°ÏÈ²»ÔÚÕâÀïÖ±½Ó¸ÉÔ¤ AI£¬Âß¼­·Åµ½ EnemyAI ÄÇ±ß¶©ÔÄÊÂ¼şÀ´×ö
-                    // Debug.Log($"[Combat] Enemy poise reaction = {reaction}");
                 }
 
                 damageCount++;
             }
-            else
-            {
-                Debug.Log($"[Combat] Collider {col.name} has no EnemyResources.");
-            }
         }
-
-        Debug.Log($"[Combat] Damage applied to {damageCount} targets.");
+        // Debug.Log($"[Combat] Damage applied to {damageCount} targets.");
     }
 
-    
-
-    // =============== ¹¤¾ß·½·¨ ===============
+    // =============== å·¥å…·æ–¹æ³• ===============
     private void ApplyMovementMultiplier(float multiplier)
     {
         if (movement == null) return;
@@ -266,17 +341,18 @@ public class PlayerCombatController : MonoBehaviour
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(debugHitboxCenter, debugHitboxRadius);
     }
+
     public bool CanDodgeNow()
     {
-        // Idle£ºËæÊ±¿ÉÒÔÉÁ±Ü
+        // Idleï¼šéšæ—¶å¯ä»¥é—ªé¿
         if (currentState == AttackState.Idle)
             return true;
 
-        // Startup / Recovery£ºÔÊĞíÉÁ±Ü£¬ÓÃÀ´×ö cancel
+        // Startup / Recoveryï¼šå…è®¸é—ªé¿ï¼Œç”¨æ¥åš cancel
         if (currentState == AttackState.Startup || currentState == AttackState.Recovery)
             return true;
 
-        // Active£º²»ÔÊĞíÉÁ±Ü
+        // Activeï¼šä¸å…è®¸é—ªé¿
         return false;
     }
 }

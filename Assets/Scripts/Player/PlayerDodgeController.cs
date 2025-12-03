@@ -5,6 +5,14 @@ using System;
 [RequireComponent(typeof(CharacterController))]
 public class PlayerDodgeController : MonoBehaviour
 {
+    [Header("Dash Attack Window")]
+    [SerializeField] private float dashAttackWindow = 0.25f;   // 闪避结束后还能接 Dash 攻击的时间
+
+    private float postDodgeTimer;
+
+    // ⭐ 给 Combat 查询用：只在闪避结束后的窗口期内为 true
+    public bool IsInDashAttackWindow => postDodgeTimer > 0f;
+
     [Header("Input")]
     [SerializeField] private KeyCode dodgeKey = KeyCode.Space;
 
@@ -21,6 +29,7 @@ public class PlayerDodgeController : MonoBehaviour
     private Color[] originalColors;
     [SerializeField] private Color iFrameColor = new Color(0.6f, 0f, 1f, 1f); // 紫色
 
+    
     // 从 Stats 读的配置
     private float dodgeDistance;
     private float dodgeDuration;
@@ -96,6 +105,7 @@ public class PlayerDodgeController : MonoBehaviour
         TickCooldown(dt);
         HandleInput();
         TickDodge(dt);
+        TickPostDodgeWindow(dt);   // ⭐ 新增
     }
 
     // 冷却计时
@@ -221,9 +231,19 @@ public class PlayerDodgeController : MonoBehaviour
         {
             movement.isMovementLocked = false;
         }
-
+        postDodgeTimer = dashAttackWindow;
         // 🔴 新增：广播结束闪避事件
         OnDodgeEnded?.Invoke();
+    }
+
+    private void TickPostDodgeWindow(float dt)
+    {
+        if (postDodgeTimer > 0f)
+        {
+            postDodgeTimer -= dt;
+            if (postDodgeTimer < 0f)
+                postDodgeTimer = 0f;
+        }
     }
 
     private void SetIFrameColor()

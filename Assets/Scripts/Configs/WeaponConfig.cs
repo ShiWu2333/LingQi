@@ -8,4 +8,5 @@ public class WeaponConfig : ScriptableObject
     [Header("Basic Attacks")]
     public AttackData lightAttack;
     public AttackData heavyAttack;
+    public AttackData dashAttack;
 }

@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   lightAttack: {fileID: 11400000, guid: eb8b0ee7400cc174d89f89eece8431fc, type: 2}
   heavyAttack: {fileID: 11400000, guid: d2a0096fea81b80469bda21796838d1e, type: 2}
+  dashAttack: {fileID: 11400000, guid: ee0ff3a7207f4f244893875c3875442d, type: 2}

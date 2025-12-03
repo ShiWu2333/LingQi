@@ -10,14 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 23b7e4405d614c4418e30b97f39c9b4b, type: 3}
-  m_Name: Weapon1_Light
+  m_Name: Weapon1_DashAttack
   m_EditorClassIdentifier: 
-  attackId: light_1
+  attackId: DashAttack_1
   hitRange: 1.5
   hitRadius: 1
-  startup: 0.12
-  active: 0.08
-  recovery: 0.25
+  startup: 0.3
+  active: 0.1
+  recovery: 0.44
   staminaCost: 8
   manaCost: 0
   damage: 10
@@ -25,8 +25,8 @@ MonoBehaviour:
   moveMultiplierActive: 0
   moveMultiplierRecovery: 0
   stepForward: 1
-  stepDistance: 0.5
-  stepDuration: 0.1
+  stepDistance: 2
+  stepDuration: 0.2
   cancelableAfter: 0.1
   bufferWindow: 0.15
   poiseDamage: 5
@@ -36,5 +36,5 @@ MonoBehaviour:
   nextCombo: {fileID: 0}
   comboInputOpenTime: 0
   comboInputCloseTime: 0
-  animationClip: {fileID: 7400000, guid: 7955a24b57357004ca47200c7aaeb73d, type: 2}
-  animatorStateName: LightAttack
+  animationClip: {fileID: 7400000, guid: 32e2af2bb6640cc47bb840106f82085e, type: 2}
+  animatorStateName: DashAttack

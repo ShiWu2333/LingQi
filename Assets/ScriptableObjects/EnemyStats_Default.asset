@@ -17,12 +17,12 @@ MonoBehaviour:
   poiseRegenDelay: 10
   poiseRegenPerSecond: 20
   breakDuration: 1
-  moveSpeed: 3
+  moveSpeed: 2
   chaseSpeed: 4
   rotateSpeed: 12
-  detectionRange: 10
+  detectionRange: 5
   attackRange: 1.8
-  attackInterval: 1
+  attackInterval: 0.75
   defaultAttack: {fileID: 11400000, guid: 68f0fa0735406db47925cdce891850e0, type: 2}
   heavyAttack: {fileID: 0}
   impactProfile: {fileID: 11400000, guid: 346378d05ca706d46a020b621d1f80dc, type: 2}

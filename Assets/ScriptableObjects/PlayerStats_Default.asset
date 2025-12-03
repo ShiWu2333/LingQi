@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: PlayerStats_Default
   m_EditorClassIdentifier: 
   maxHP: 100
-  moveSpeed: 6
+  moveSpeed: 3.5
   maxStamina: 100
   staminaRegenPerSecond: 15
   staminaRegenDelayAfterUse: 0.4
@@ -24,7 +24,7 @@ MonoBehaviour:
   poiseRegenPerSecond: 30
   breakDuration: 2
   impactProfile: {fileID: 11400000, guid: 44d38290032ebcc4e8b7fc70e9806849, type: 2}
-  dodgeDistance: 3
+  dodgeDistance: 1.5
   dodgeDuration: 0.22
   dodgeStaminaCost: 20
   dodgeCooldown: 0.3

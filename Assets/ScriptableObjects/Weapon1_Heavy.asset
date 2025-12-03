@@ -21,12 +21,12 @@ MonoBehaviour:
   staminaCost: 18
   manaCost: 10
   damage: 30
-  moveMultiplierStartup: 0.2
+  moveMultiplierStartup: 0
   moveMultiplierActive: 0
-  moveMultiplierRecovery: 0.4
-  stepForward: 0
-  stepDistance: 1
-  stepDuration: 0.1
+  moveMultiplierRecovery: 0
+  stepForward: 1
+  stepDistance: 0.7
+  stepDuration: 0.12
   cancelableAfter: 0.1
   bufferWindow: 0.15
   poiseDamage: 20
