@@ -28,14 +28,31 @@ public class EnemyAIController : MonoBehaviour
     private EnemyResources _resources;
     private Transform _player;
     private AttackData _attackData;   // 目前只用一个默认攻击
-
+    public string CurrentDebugState => state.ToString();
     // 攻击生效阶段标记 + 最近一次 hitbox 数据
     private bool isAttackActive;
     private Vector3 lastHitboxCenter;
     private float lastHitboxRadius;
+    private EnemyPoiseController _poise;
+    private Coroutine _attackRoutine;    // 记住当前攻击协程
 
     private void Awake()
     {
+        _agent = GetComponent<NavMeshAgent>();
+        _resources = GetComponent<EnemyResources>();
+        _poise = GetComponent<EnemyPoiseController>();
+
+        if (_resources.Stats == null)
+        {
+            Debug.LogError("[EnemyAI] EnemyStatsConfig is missing on EnemyResources.", this);
+            enabled = false;
+            return;
+        }
+
+        if (_poise != null)
+        {
+            _poise.OnImpactReaction += HandleImpactReaction;
+        }
         _agent = GetComponent<NavMeshAgent>();
         _resources = GetComponent<EnemyResources>();
 
@@ -84,6 +101,10 @@ public class EnemyAIController : MonoBehaviour
         {
             _resources.OnDeath -= HandleDeath;
         }
+        if (_poise != null)
+        {
+            _poise.OnImpactReaction -= HandleImpactReaction;
+        }
     }
 
     private void Update()
@@ -108,6 +129,65 @@ public class EnemyAIController : MonoBehaviour
                 TickCooldown();
                 break;
         }
+    }
+
+    private void HandleImpactReaction(ImpactReaction reaction)
+    {
+        switch (reaction)
+        {
+            case ImpactReaction.None:
+                // 完全无事发生（真霸体）
+                break;
+
+            case ImpactReaction.LightStagger:
+                // 轻微硬直：不打断动作，但触发一个轻微受击反馈
+                PlaySmallStagger();
+                break;
+
+            case ImpactReaction.MediumStagger:
+                // 中硬直：打断当前动作 + 进入受击状态
+                InterruptCurrentAction();
+                PlayMediumStagger();
+                break;
+
+            case ImpactReaction.HeavyStagger:
+                // 大硬直：打断当前动作 + 进入大受击/击退
+                InterruptCurrentAction();
+                PlayLargeStagger();
+                break;
+        }
+    }
+    private void PlaySmallStagger()
+    {
+        // TODO: 将来绑一个轻微抖动动画
+        // 现在可以先什么都不干，或者简单 log 一下
+        // Debug.Log("[Enemy] SmallStagger");
+    }
+
+    private void PlayMediumStagger()
+    {
+        // TODO: 将来播放“受击打断”动画
+        // 当前原型可以先让 AI 在原地停一下之类
+    }
+
+    private void PlayLargeStagger()
+    {
+        // TODO: 将来播放“受击 + 击退”动画
+    }
+
+    private void InterruptCurrentAction()
+    {
+        if (_attackRoutine != null)
+        {
+            StopCoroutine(_attackRoutine);
+            _attackRoutine = null;
+        }
+
+        isAttackActive = false;
+
+        // 暂时：打断后进入冷却 / 或硬直状态（之后你可能会拆出 Stagger 状态）
+        SwitchState(EnemyState.Cooldown);
+        stateTimer = 0f;
     }
 
     private void TickIdle()
@@ -149,7 +229,10 @@ public class EnemyAIController : MonoBehaviour
         if (dist <= _resources.Stats.attackRange && _attackData != null)
         {
             _agent.isStopped = true;
-            StartCoroutine(CoDoAttack());
+            if (_attackRoutine == null)
+            {
+                _attackRoutine = StartCoroutine(CoDoAttack());
+            }
         }
     }
 
@@ -193,6 +276,8 @@ public class EnemyAIController : MonoBehaviour
         // 攻击结束，进入冷却
         SwitchState(EnemyState.Cooldown);
         stateTimer = 0f;
+
+        _attackRoutine = null;
     }
 
     private void TickCooldown()

@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 [DisallowMultipleComponent]
@@ -12,19 +13,31 @@ public class FlashOnHit : MonoBehaviour
 
     private void Awake()
     {
-        renderers = GetComponentsInChildren<Renderer>();
-        originalColors = new Color[renderers.Length];
+        var all = GetComponentsInChildren<Renderer>();
+        var list = new List<Renderer>();
+        var colors = new List<Color>();
 
-        for (int i = 0; i < renderers.Length; i++)
+        foreach (var r in all)
         {
-            // 注意：material 会实例化一份，对原型阶段来说可以接受
-            originalColors[i] = renderers[i].material.color;
+            var mat = r.material;
+            // 只保留有 _Color 属性的材质，跳过 TMP 之类的
+            if (mat != null && mat.HasProperty("_Color"))
+            {
+                list.Add(r);
+                colors.Add(mat.color);
+            }
         }
+
+        renderers = list.ToArray();
+        originalColors = colors.ToArray();
     }
 
     public void Trigger()
     {
+        // 敌人已经被禁用时不要再开协程（下面解决第二个报错）
+        if (!isActiveAndEnabled) return;
         if (renderers == null || renderers.Length == 0) return;
+
         StopAllCoroutines();
         StartCoroutine(FlashRoutine());
     }
@@ -34,7 +47,10 @@ public class FlashOnHit : MonoBehaviour
         // 变色
         for (int i = 0; i < renderers.Length; i++)
         {
-            renderers[i].material.color = flashColor;
+            if (renderers[i] != null)
+            {
+                renderers[i].material.color = flashColor;
+            }
         }
 
         yield return new WaitForSeconds(flashDuration);

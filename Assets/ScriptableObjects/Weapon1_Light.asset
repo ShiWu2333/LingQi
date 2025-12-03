@@ -29,3 +29,10 @@ MonoBehaviour:
   stepDuration: 0.1
   cancelableAfter: 0.1
   bufferWindow: 0.15
+  poiseDamage: 0
+  impact: 0
+  comboGroupId: 
+  comboStepIndex: 0
+  nextCombo: {fileID: 0}
+  comboInputOpenTime: 0
+  comboInputCloseTime: 0

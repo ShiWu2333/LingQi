@@ -70,4 +70,6 @@ public class AttackData : ScriptableObject
     [Header("Combo Input Window (相对 Attack timeline 时间)")]
     public float comboInputOpenTime = 0.0f;   // 允许按键进入下一段连击的开始时间
     public float comboInputCloseTime = 0.0f;  // 结束时间
+
+
 }

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHP: 50
   maxPoise: 40
-  poiseRegenDelay: 1.5
+  poiseRegenDelay: 10
   poiseRegenPerSecond: 20
   breakDuration: 1
   moveSpeed: 3
@@ -22,9 +22,9 @@ MonoBehaviour:
   rotateSpeed: 12
   detectionRange: 10
   attackRange: 1.8
-  attackInterval: 1.5
+  attackInterval: 1
   defaultAttack: {fileID: 11400000, guid: 68f0fa0735406db47925cdce891850e0, type: 2}
   heavyAttack: {fileID: 0}
-  impactProfile: {fileID: 11400000, guid: 4ce8c9fe2e3c1e1458ec90efbf0c0c9c, type: 2}
+  impactProfile: {fileID: 11400000, guid: 346378d05ca706d46a020b621d1f80dc, type: 2}
   hitFlashColor: {r: 1, g: 1, b: 1, a: 1}
   hitFlashDuration: 0.1

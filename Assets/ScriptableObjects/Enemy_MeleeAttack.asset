@@ -15,9 +15,9 @@ MonoBehaviour:
   attackId: enemy_slash_1
   hitRange: 1
   hitRadius: 1.2
-  startup: 0.35
+  startup: 0.6
   active: 0.12
-  recovery: 1
+  recovery: 0.3
   staminaCost: 0
   manaCost: 0
   damage: 12
@@ -29,3 +29,10 @@ MonoBehaviour:
   stepDuration: 0.1
   cancelableAfter: 0.1
   bufferWindow: 0.15
+  poiseDamage: 0
+  impact: 0
+  comboGroupId: 
+  comboStepIndex: 0
+  nextCombo: {fileID: 0}
+  comboInputOpenTime: 0
+  comboInputCloseTime: 0

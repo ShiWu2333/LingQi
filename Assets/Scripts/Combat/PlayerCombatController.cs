@@ -1,4 +1,5 @@
 using UnityEngine;
+using System;
 
 [DisallowMultipleComponent]
 public class PlayerCombatController : MonoBehaviour
@@ -212,11 +213,20 @@ public class PlayerCombatController : MonoBehaviour
 
             if (col.TryGetComponent(out EnemyResources enemyRes))
             {
-                // 使用 Collider 提供的最近点作为命中点，更贴合模型表面
                 Vector3 hitPoint = col.ClosestPoint(debugHitboxCenter);
 
-                // 这里调用新的敌人资源脚本
+                // 1）扣血 + 飘字 + 闪白
                 enemyRes.TakeDamage(currentAttack.damage, hitPoint);
+
+                // 2）冲击力 + 韧性 + 硬直
+                if (col.TryGetComponent(out EnemyPoiseController poise))
+                {
+                    // 这里先简单用 Default 上下文，之后你可以根据敌人当前状态传不同的 ImpactContext
+                    var reaction = poise.ApplyHit(currentAttack, ImpactContext.Default);
+
+                    // 目前先不在这里直接干预 AI，逻辑放到 EnemyAI 那边订阅事件来做
+                    // Debug.Log($"[Combat] Enemy poise reaction = {reaction}");
+                }
 
                 damageCount++;
             }

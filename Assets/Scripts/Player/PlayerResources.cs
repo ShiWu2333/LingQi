@@ -14,6 +14,7 @@ public class PlayerResources : MonoBehaviour
 
     private float staminaRegenDelayTimer;
     private PlayerDodgeController dodge;
+    private FlashOnHit _flashOnHit;
 
     // 事件：以后 UI / 其他系统可以订阅
     public event Action<float, float> OnHPChanged;
@@ -39,6 +40,7 @@ public class PlayerResources : MonoBehaviour
             return;
         }
         dodge = GetComponent<PlayerDodgeController>();
+        _flashOnHit = GetComponentInChildren<FlashOnHit>();   // 新增
         InitFromConfig();
     }
 
@@ -84,6 +86,10 @@ public class PlayerResources : MonoBehaviour
         }
 
         currentHP -= amount;
+        if (_flashOnHit != null && amount > 0f)
+        {
+            _flashOnHit.Trigger();
+        }
         if (currentHP <= 0f)
         {
             currentHP = 0f;
