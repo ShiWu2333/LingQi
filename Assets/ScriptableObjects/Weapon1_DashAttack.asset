@@ -13,29 +13,29 @@ MonoBehaviour:
   m_Name: Weapon1_DashAttack
   m_EditorClassIdentifier: 
   attackId: DashAttack_1
-  hitboxShape: 0
-  hitboxLocalOffset: {x: 0, y: 0, z: 1}
+  hitboxShape: 1
+  hitboxLocalOffset: {x: 0, y: 1.34, z: 1.66}
   hitboxRadius: 1
-  hitboxBoxHalfExtents: {x: 0.5, y: 0.5, z: 1}
+  hitboxBoxHalfExtents: {x: 0.5, y: 1.43, z: 1.34}
   hitboxCapsuleRadius: 0.7
   hitboxCapsuleHeight: 2
   hitboxCapsuleDirection: {x: 0, y: 0, z: 1}
   startup: 0.2
-  active: 0.18
+  active: 0.1
   recovery: 0.25
-  hitStartTime: 0
-  hitEndTime: 0
+  hitStartTime: 0.25
+  hitEndTime: 0.3
   staminaCost: 8
   manaCost: 0
-  damage: 10
+  damage: 30
   moveMultiplierStartup: 0
   moveMultiplierActive: 0
   moveMultiplierRecovery: 0
   stepForward: 1
-  stepDistance: 2
-  stepDuration: 0.2
+  stepDistance: 2.5
+  stepDuration: 0.3
   cancelableAfter: 0.1
-  poiseDamage: 5
+  poiseDamage: 30
   impact: 0
   comboGroupId: 
   comboStepIndex: 0
@@ -45,20 +45,20 @@ MonoBehaviour:
   animationClip: {fileID: 7400000, guid: 32e2af2bb6640cc47bb840106f82085e, type: 2}
   animatorStateName: DashAttack
   swordMotion:
-    startAngle: -120
-    endAngle: 20
+    startAngle: 90
+    endAngle: 90
     radius: 1
     idleAngle: 0
     idleRadius: 1
     anticipationOffset: 0
     overshootOffset: 0
-    startPitch: 70
-    endPitch: -50
+    startPitch: 0
+    endPitch: 0
     idlePitch: 0
-    anticipationPitchOffset: 15
-    overshootPitchOffset: -10
+    anticipationPitchOffset: 0
+    overshootPitchOffset: 0
     startRoll: 0
-    endRoll: 0
+    endRoll: 180
     idleRoll: 0
     anticipationRollOffset: 0
     overshootRollOffset: 0
@@ -66,7 +66,7 @@ MonoBehaviour:
   splashVFXPrefab: {fileID: 3528051367564371829, guid: dca59b7a4630b9f40b5264cd8458014a, type: 3}
   hitVFXPrefab: {fileID: 833273125943498317, guid: 9eaf97f03c39c9743a286e2ac3725124, type: 3}
   slashLocalOffset: {x: 0, y: 0, z: 0}
-  slashLocalEulerOffset: {x: 0, y: 0, z: 0}
+  slashLocalEulerOffset: {x: -30, y: -90, z: 180}
   slashScale: 1
   vfxBaseDuration: 1
   vfxLifetime: 0.5

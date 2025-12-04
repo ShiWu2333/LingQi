@@ -27,7 +27,7 @@ MonoBehaviour:
   hitEndTime: 0.65
   staminaCost: 18
   manaCost: 10
-  damage: 30
+  damage: 20
   moveMultiplierStartup: 0
   moveMultiplierActive: 0
   moveMultiplierRecovery: 0
