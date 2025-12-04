@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 23b7e4405d614c4418e30b97f39c9b4b, type: 3}
-  m_Name: Weapon1_Light
+  m_Name: Weapon1_Light 1
   m_EditorClassIdentifier: 
   attackId: light_1
   hitRange: 1.5
   hitRadius: 1
-  startup: 0.12
-  active: 0.08
+  startup: 0.2
+  active: 0.1
   recovery: 0.25
   staminaCost: 8
   manaCost: 0
@@ -38,3 +38,10 @@ MonoBehaviour:
   comboInputCloseTime: 0
   animationClip: {fileID: 7400000, guid: 7955a24b57357004ca47200c7aaeb73d, type: 2}
   animatorStateName: LightAttack
+  swordMotion:
+    motionType: 0
+    startAngle: 0
+    endAngle: 180
+    radius: 1
+    idleAngle: 10
+    idleRadius: 0.8

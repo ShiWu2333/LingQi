@@ -10,6 +10,8 @@ public class PlayerCombatController : MonoBehaviour
     [Header("Input")]
     [SerializeField] private KeyCode lightKey = KeyCode.Mouse0;
     [SerializeField] private KeyCode heavyKey = KeyCode.Mouse1;
+    [SerializeField] private bool attackBuffered;
+    private float lastAttackBufferedTime;
 
     [Header("Hitbox")]
     [SerializeField] private LayerMask enemyLayers;
@@ -23,6 +25,8 @@ public class PlayerCombatController : MonoBehaviour
     [SerializeField] private AttackData currentAttack;
     [SerializeField] private float stateTimer;
 
+    [Header("Debug (Attack Runtime)")]
+    [SerializeField] private float attackElapsed;          // 从这一击开始经过的时间
     public event Action<AttackData> OnAttackStarted;
     public event Action<AttackData> OnAttackEnded;
 
@@ -84,42 +88,55 @@ public class PlayerCombatController : MonoBehaviour
         if (weaponConfig == null || resources == null)
             return;
 
-        if (currentState != AttackState.Idle)
-            return; // 简单版：攻击中不接受新输入（之后可以加 buffer）
-
+        // -------- 轻攻击输入 --------
         if (Input.GetKeyDown(lightKey))
         {
-            AttackData attackToUse = null;
+            // 任何时候按轻攻，都先写入缓冲
+            attackBuffered = true;
+            lastAttackBufferedTime = Time.time;
 
-            bool hasDashAttack = (weaponConfig.dashAttack != null && dodge != null);
-
-            if (hasDashAttack)
+            // 如果当前在 Idle，就立刻用掉这次输入起手
+            if (currentState == AttackState.Idle)
             {
-                // 闪避过程中按下：排队，等结束后再放
-                if (dodge.IsDodging)
+                AttackData attackToUse = null;
+                bool hasDashAttack = (weaponConfig.dashAttack != null && dodge != null);
+
+                if (hasDashAttack)
                 {
-                    dashAttackQueued = true;
-                    return;
+                    if (dodge.IsDodging)
+                    {
+                        dashAttackQueued = true;
+                        return;
+                    }
+
+                    if (dodge.IsInDashAttackWindow)
+                    {
+                        attackToUse = weaponConfig.dashAttack;
+                    }
                 }
 
-                // 闪避刚结束、还在 dash 窗口内：直接放 dashAttack
-                if (dodge.IsInDashAttackWindow)
+                if (attackToUse == null)
+                    attackToUse = weaponConfig.lightAttack;
+
+                if (attackToUse != null)
                 {
-                    attackToUse = weaponConfig.dashAttack;
+                    TryStartAttack(attackToUse);
+                    attackBuffered = false; // 这次输入已经被用掉
                 }
             }
-
-            // 不在窗口或没 dashAttack：普通 lightAttack
-            if (attackToUse == null)
-                attackToUse = weaponConfig.lightAttack;
-
-            TryStartAttack(attackToUse);
         }
+        // -------- 重攻击输入 --------
         else if (Input.GetKeyDown(heavyKey))
         {
-            TryStartAttack(weaponConfig.heavyAttack);
+            // 重击现在不做缓冲，只在 Idle 起手（之后要也可以按同样方式加）
+            if (currentState == AttackState.Idle)
+            {
+                TryStartAttack(weaponConfig.heavyAttack);
+            }
         }
     }
+
+
 
     private void TryConsumeQueuedDashAttack()
     {
@@ -179,10 +196,10 @@ public class PlayerCombatController : MonoBehaviour
         currentAttack = attack;
         currentState = AttackState.Startup;
         stateTimer = 0f;
+        attackElapsed = 0f;
 
         ApplyMovementMultiplier(currentAttack.moveMultiplierStartup);
 
-        // 通知表现层：某个 AttackData 正在启动
         OnAttackStarted?.Invoke(currentAttack);
     }
 
@@ -193,16 +210,22 @@ public class PlayerCombatController : MonoBehaviour
             return;
 
         stateTimer += dt;
+        attackElapsed += dt;
 
         switch (currentState)
         {
             case AttackState.Startup:
-                UpdateStartup(dt);   // ⭐ 这里实现 stepForward
+                UpdateStartup(dt);
+                if (TryConsumeBufferedCombo())
+                    return;
                 if (stateTimer >= currentAttack.startup)
                     EnterActive();
                 break;
 
             case AttackState.Active:
+                if (TryConsumeBufferedCombo())
+                    return;
+
                 if (stateTimer >= currentAttack.active)
                     EnterRecovery();
                 else
@@ -210,11 +233,58 @@ public class PlayerCombatController : MonoBehaviour
                 break;
 
             case AttackState.Recovery:
+                // 每帧尝试消费输入缓冲（如果时间在 combo 窗口内）
+                if (TryConsumeBufferedCombo())
+                    return;
+
                 if (stateTimer >= currentAttack.recovery)
                     EndAttack();
                 break;
+
         }
     }
+
+    /// <summary>
+    /// 如果当前这招有 nextCombo，且 attackElapsed 落在 combo 输入窗口内，
+    /// 并且有攻击输入缓冲，则消费缓冲并起手下一段。
+    /// 返回 true 表示已经开始了下一段攻击，这一帧后续逻辑应该中止。
+    /// </summary>
+    private bool TryConsumeBufferedCombo()
+    {
+        if (!attackBuffered)
+            return false;
+
+        if (currentAttack == null)
+            return false;
+
+        if (currentAttack.nextCombo == null)
+            return false;
+
+        // 这招的 combo 窗口（单位：从这一击开始算起的时间）
+        float open = currentAttack.comboInputOpenTime;
+        float close = currentAttack.comboInputCloseTime;
+
+        // 数据填错的兜底
+        if (close <= open)
+        {
+            // 你可以选择直接不允许连；这里简单返回
+            return false;
+        }
+
+        float t = attackElapsed;
+
+        // 不在窗口内，不吃这次缓冲
+        if (t < open || t > close)
+            return false;
+
+        // 时间在窗口内，有缓冲，有 nextCombo → 起手下一段
+        attackBuffered = false;
+
+        var next = currentAttack.nextCombo;
+        TryStartAttack(next);
+        return true;
+    }
+
 
     // =============== 各阶段 ===============
     private void UpdateStartup(float dt)
