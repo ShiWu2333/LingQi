@@ -13,20 +13,40 @@ public class PlayerSwordProceduralAnimator : MonoBehaviour
     private float timer;
     private bool playing;
 
-    // 角度都是“相对 baseYaw 的偏移”，单位：度
-    private float _baseLocalYaw;       // 初始 localEulerAngles.y
-    private float _currentAngle;       // 当前相对角
-    private float _fromAngle;          // 本次攻击开始时的角度
-    private float _startAngle;
-    private float _endAngle;
-    private float _anticipationAngle;
-    private float _overshootAngle;
-    private float _idleAngle;          // 来自 motion.idleAngle
+    // ------------ Yaw（水平方向，绕 Y） ------------
+    private float _baseLocalYaw;
+    private float _currentYaw;
+    private float _fromYaw;
+    private float _startYaw;
+    private float _endYaw;
+    private float _anticipationYaw;
+    private float _overshootYaw;
+    private float _idleYaw;
+
+    // ------------ Pitch（垂直方向，绕 X） ------------
+    private float _baseLocalPitch;
+    private float _currentPitch;
+    private float _fromPitch;
+    private float _startPitch;
+    private float _endPitch;
+    private float _anticipationPitch;
+    private float _overshootPitch;
+    private float _idlePitch;
+
+    // ------------ Roll（扭转，绕 Z） ------------
+    private float _baseLocalRoll;
+    private float _currentRoll;
+    private float _fromRoll;
+    private float _startRoll;
+    private float _endRoll;
+    private float _anticipationRoll;
+    private float _overshootRoll;
+    private float _idleRoll;
 
     // 回 idle 的状态
     private bool _returningToIdle;
     private float _idleReturnTimer;
-    [SerializeField] private float idleReturnDuration = 0.25f; // 自己可调
+    [SerializeField] private float idleReturnDuration = 0.25f;
 
     private void OnEnable()
     {
@@ -51,9 +71,16 @@ public class PlayerSwordProceduralAnimator : MonoBehaviour
 
     private void Start()
     {
-        _baseLocalYaw = transform.localEulerAngles.y;
-        _currentAngle = 0f; // 初始认为 idleAngle = 0
-        ApplyAngle(_currentAngle);
+        Vector3 e = transform.localEulerAngles;
+        _baseLocalYaw = e.y;
+        _baseLocalPitch = e.x;
+        _baseLocalRoll = e.z;
+
+        _currentYaw = 0f;
+        _currentPitch = 0f;
+        _currentRoll = 0f;
+
+        ApplyAngles(_currentYaw, _currentPitch, _currentRoll);
     }
 
     private void HandleAttackStarted(AttackData data)
@@ -67,24 +94,38 @@ public class PlayerSwordProceduralAnimator : MonoBehaviour
             return;
         }
 
-        // 本次攻击从当前角度开始（支持 combo 平滑衔接）
-        _fromAngle = _currentAngle;
-        _startAngle = motion.startAngle;
-        _endAngle = motion.endAngle;
-        _anticipationAngle = motion.startAngle + motion.anticipationOffset;
-        _overshootAngle = motion.endAngle + motion.overshootOffset;
-        _idleAngle = motion.idleAngle;
+        // ---- Yaw ----
+        _fromYaw = _currentYaw;
+        _startYaw = motion.startAngle;
+        _endYaw = motion.endAngle;
+        _anticipationYaw = motion.startAngle + motion.anticipationOffset;
+        _overshootYaw = motion.endAngle + motion.overshootOffset;
+        _idleYaw = motion.idleAngle;
+
+        // ---- Pitch ----
+        _fromPitch = _currentPitch;
+        _startPitch = motion.startPitch;
+        _endPitch = motion.endPitch;
+        _anticipationPitch = motion.startPitch + motion.anticipationPitchOffset;
+        _overshootPitch = motion.endPitch + motion.overshootPitchOffset;
+        _idlePitch = motion.idlePitch;
+
+        // ---- Roll ----
+        _fromRoll = _currentRoll;
+        _startRoll = motion.startRoll;
+        _endRoll = motion.endRoll;
+        _anticipationRoll = motion.startRoll + motion.anticipationRollOffset;
+        _overshootRoll = motion.endRoll + motion.overshootRollOffset;
+        _idleRoll = motion.idleRoll;
 
         timer = 0f;
         playing = true;
 
-        // 如果正在回 idle，而此时又开始新攻击，就打断 idle 回归
         _returningToIdle = false;
     }
 
     private void HandleAttackEnded(AttackData data)
     {
-        // 没有 combo 的情况才会进来，这时 _currentAngle ≈ overshootAngle
         if (motion != null)
         {
             _returningToIdle = true;
@@ -112,38 +153,35 @@ public class PlayerSwordProceduralAnimator : MonoBehaviour
 
             if (t < s)
             {
-                // STARTUP：fromAngle → anticipationAngle → startAngle
                 float nt = s > 0f ? t / s : 1f;
                 UpdateStartup(nt);
             }
             else if (t < s + a)
             {
-                // ACTIVE：anticipationAngle → endAngle（Slow In）
                 float nt = a > 0f ? (t - s) / a : 1f;
                 UpdateActive(nt);
             }
             else if (t < total)
             {
-                // RECOVERY：endAngle → overshootAngle（Slow Out）
                 float nt = r > 0f ? (t - s - a) / r : 1f;
                 UpdateRecovery(nt);
             }
             else
             {
-                // 理论上 AttackState 会在 recovery 结束时调用 OnAttackEnded，
-                // 这里兜底一下
                 if (!_returningToIdle)
                     HandleAttackEnded(currentAttack);
             }
         }
         else if (_returningToIdle)
         {
-            // 没有新攻击，并且需要回 idle
             _idleReturnTimer += dt;
             float nt = Mathf.Clamp01(_idleReturnTimer / idleReturnDuration);
 
-            float angle = Mathf.Lerp(_currentAngle, _idleAngle, EaseOutQuad(nt));
-            ApplyAngle(angle);
+            float yaw = Mathf.Lerp(_currentYaw, _idleYaw, EaseOutQuad(nt));
+            float pitch = Mathf.Lerp(_currentPitch, _idlePitch, EaseOutQuad(nt));
+            float roll = Mathf.Lerp(_currentRoll, _idleRoll, EaseOutQuad(nt));
+
+            ApplyAngles(yaw, pitch, roll);
 
             if (nt >= 1f)
                 _returningToIdle = false;
@@ -154,39 +192,53 @@ public class PlayerSwordProceduralAnimator : MonoBehaviour
 
     private void UpdateStartup(float t)
     {
-        // Startup 整个阶段：fromAngle -> anticipationAngle（抬手）
-        // t: 0~1，使用 EaseOutQuad 让起刀越来越快
         float eased = EaseOutQuad(t);
-        float angle = Mathf.Lerp(_fromAngle, _anticipationAngle, eased);
-        ApplyAngle(angle);
+
+        float yaw = Mathf.Lerp(_fromYaw, _anticipationYaw, eased);
+        float pitch = Mathf.Lerp(_fromPitch, _anticipationPitch, eased);
+        float roll = Mathf.Lerp(_fromRoll, _anticipationRoll, eased);
+
+        ApplyAngles(yaw, pitch, roll);
     }
 
     private void UpdateActive(float t)
     {
-        // Active: anticipationAngle -> endAngle（Slow In）
-        float eased = EaseInQuad(t); // 前半慢，后半快
-        float angle = Mathf.Lerp(_anticipationAngle, _endAngle, eased);
-        ApplyAngle(angle);
+        float eased = EaseInQuad(t);
+
+        float yaw = Mathf.Lerp(_anticipationYaw, _endYaw, eased);
+        float pitch = Mathf.Lerp(_anticipationPitch, _endPitch, eased);
+        float roll = Mathf.Lerp(_anticipationRoll, _endRoll, eased);
+
+        ApplyAngles(yaw, pitch, roll);
     }
 
     private void UpdateRecovery(float t)
     {
-        float eased = EaseOutQuad(t);    // 一开始快，后面慢慢停
-        float angle = Mathf.Lerp(_endAngle, _overshootAngle, eased);
-        ApplyAngle(angle);
+        float eased = EaseOutQuad(t);
+
+        float yaw = Mathf.Lerp(_endYaw, _overshootYaw, eased);
+        float pitch = Mathf.Lerp(_endPitch, _overshootPitch, eased);
+        float roll = Mathf.Lerp(_endRoll, _overshootRoll, eased);
+
+        ApplyAngles(yaw, pitch, roll);
     }
 
     // -------- 实际写入 Transform --------
 
-    private void ApplyAngle(float attackAngle)
+    private void ApplyAngles(float yaw, float pitch, float roll)
     {
-        _currentAngle = attackAngle;
-        Vector3 euler = transform.localEulerAngles;
-        euler.y = _baseLocalYaw + attackAngle;
-        transform.localEulerAngles = euler;
+        _currentYaw = yaw;
+        _currentPitch = pitch;
+        _currentRoll = roll;
+
+        Vector3 e = transform.localEulerAngles;
+        e.y = _baseLocalYaw + yaw;   // 水平
+        e.x = _baseLocalPitch + pitch; // 垂直
+        e.z = _baseLocalRoll + roll;  // 扭转
+        transform.localEulerAngles = e;
     }
 
-    // 曲线工具：Slow In / Slow Out / EaseInOut
+    // 曲线工具：Slow In / Slow Out
     private float EaseInQuad(float x) => x * x;
     private float EaseOutQuad(float x) => 1f - (1f - x) * (1f - x);
 }

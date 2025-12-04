@@ -26,3 +26,9 @@ public enum ImpactContext
     Broken          // 削韧状态（一般任何冲击都保持硬直）
 }
 
+public enum HitboxShape
+{
+    Sphere,   // 球形（默认）
+    Box,      // 盒形（长方体）
+    Capsule   // 胶囊体
+}

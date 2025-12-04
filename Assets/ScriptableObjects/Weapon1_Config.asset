@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b70dcd12d4ede743bde1983da716193, type: 3}
   m_Name: Weapon1_Config
   m_EditorClassIdentifier: 
-  lightAttack: {fileID: 11400000, guid: eb8b0ee7400cc174d89f89eece8431fc, type: 2}
+  lightAttack: {fileID: 11400000, guid: 29e37d4f66733e64297554645f9a5ad1, type: 2}
   heavyAttack: {fileID: 11400000, guid: d2a0096fea81b80469bda21796838d1e, type: 2}
   dashAttack: {fileID: 11400000, guid: ee0ff3a7207f4f244893875c3875442d, type: 2}

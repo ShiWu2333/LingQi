@@ -13,35 +13,60 @@ MonoBehaviour:
   m_Name: Weapon1_Light 1
   m_EditorClassIdentifier: 
   attackId: light_1
-  hitRange: 1.5
-  hitRadius: 1
+  hitboxShape: 2
+  hitboxLocalOffset: {x: 0, y: 1, z: 1.2}
+  hitboxRadius: 1
+  hitboxBoxHalfExtents: {x: 0.5, y: 0.5, z: 1}
+  hitboxCapsuleRadius: 1.5
+  hitboxCapsuleHeight: 2.3
+  hitboxCapsuleDirection: {x: 1, y: 0, z: 0}
   startup: 0.2
   active: 0.1
-  recovery: 0.25
+  recovery: 0.3
+  hitStartTime: 0.25
+  hitEndTime: 0.3
   staminaCost: 8
   manaCost: 0
   damage: 10
   moveMultiplierStartup: 0
   moveMultiplierActive: 0
   moveMultiplierRecovery: 0
-  stepForward: 1
+  stepForward: 0
   stepDistance: 0.5
   stepDuration: 0.1
   cancelableAfter: 0.1
-  bufferWindow: 0.15
   poiseDamage: 5
   impact: 0
-  comboGroupId: 
+  comboGroupId: ShortSword_L
   comboStepIndex: 0
-  nextCombo: {fileID: 0}
-  comboInputOpenTime: 0
-  comboInputCloseTime: 0
+  nextCombo: {fileID: 11400000, guid: eb8b0ee7400cc174d89f89eece8431fc, type: 2}
+  comboInputOpenTime: 0.3
+  comboInputCloseTime: 0.65
   animationClip: {fileID: 7400000, guid: 7955a24b57357004ca47200c7aaeb73d, type: 2}
   animatorStateName: LightAttack
   swordMotion:
-    motionType: 0
     startAngle: 0
-    endAngle: 180
+    endAngle: -180
     radius: 1
-    idleAngle: 10
-    idleRadius: 0.8
+    idleAngle: 0
+    idleRadius: 1
+    anticipationOffset: 20
+    overshootOffset: -20
+    startPitch: 0
+    endPitch: 0
+    idlePitch: 0
+    anticipationPitchOffset: 0
+    overshootPitchOffset: 0
+    startRoll: 0
+    endRoll: 0
+    idleRoll: 0
+    anticipationRollOffset: 0
+    overshootRollOffset: 0
+  slashVFXPrefab: {fileID: 6389406066330802589, guid: 5ef8d476ac4025a4e85cc5e7c5004889, type: 3}
+  splashVFXPrefab: {fileID: 0}
+  hitVFXPrefab: {fileID: 833273125943498317, guid: 9eaf97f03c39c9743a286e2ac3725124, type: 3}
+  slashLocalOffset: {x: 0, y: 0, z: 0}
+  slashLocalEulerOffset: {x: 90, y: -180, z: 0}
+  slashScale: 0.45
+  vfxBaseDuration: 1
+  vfxLifetime: 0.35
