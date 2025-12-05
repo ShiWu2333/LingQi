@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: PlayerStats_Default
   m_EditorClassIdentifier: 
   maxHP: 100
-  moveSpeed: 4
+  moveSpeed: 5
   maxStamina: 100
   staminaRegenPerSecond: 30
   staminaRegenDelayAfterUse: 0.4

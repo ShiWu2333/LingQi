@@ -63,7 +63,7 @@ MonoBehaviour:
     anticipationRollOffset: 0
     overshootRollOffset: 0
   slashVFXPrefab: {fileID: 8587560481101609250, guid: 2204f06b178af014986bf95a7bda8e6e, type: 3}
-  splashVFXPrefab: {fileID: 0}
+  splashVFXPrefab: {fileID: 4580678310858329431, guid: 617d250a42c20444c9a4c95b32c2f807, type: 3}
   hitVFXPrefab: {fileID: 833273125943498317, guid: 9eaf97f03c39c9743a286e2ac3725124, type: 3}
   slashLocalOffset: {x: 0, y: 0, z: 0}
   slashLocalEulerOffset: {x: -180, y: -10, z: -180}
