@@ -245,7 +245,7 @@ public class EnemyAIController : MonoBehaviour, IAttackSource
             _agent.isStopped = true;
 
             if (_attackRoutine == null)
-            {
+            {   
                 _attackRoutine = StartCoroutine(CoDoAttack());
             }
         }

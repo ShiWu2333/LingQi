@@ -143,6 +143,7 @@ public class PlayerCombatController : MonoBehaviour, IAttackSource
 
         ApplyMovementMultiplier(attack.moveMultiplierStartup);
 
+
         OnAttackStarted?.Invoke(attack);
     }
 
@@ -302,12 +303,17 @@ public class PlayerCombatController : MonoBehaviour, IAttackSource
 
         ApplyMovementMultiplier(currentAttack.moveMultiplierActive);
 
+        // ⭐ 从 Startup → Active 的这一刻，锁定当前朝向
+        if (movement != null)
+            movement.LockFacing();
+
         // 挥砍弧线，跟着剑转
         SpawnSlashVfx();
 
         // 起手溅射，不跟着剑转
         SpawnSplashVfx();
     }
+
 
     private void SpawnSlashVfx()
     {
@@ -393,6 +399,10 @@ public class PlayerCombatController : MonoBehaviour, IAttackSource
 
         ApplyMovementMultiplier(1f);
 
+        // ⭐ 攻击完全结束（含 recovery）后，解锁朝向
+        if (movement != null)
+            movement.UnlockFacing();
+
         OnAttackEnded?.Invoke(finished);
     }
 
@@ -429,9 +439,6 @@ public class PlayerCombatController : MonoBehaviour, IAttackSource
 
 
     // =========================================================
-    // HITBOX（多形状）
-    // =========================================================
-    // =========================================================
     // HITBOX（固定在玩家身前，多形状）
     // =========================================================
     private void DoHitbox()
@@ -439,13 +446,9 @@ public class PlayerCombatController : MonoBehaviour, IAttackSource
         if (currentAttack == null)
             return;
 
-        // 参考点：直接用 Player 自身
-        // hitboxLocalOffset：在 AttackData 里配置，相对 Player 本地坐标
-        // hitboxHeightOffset：统一往上抬一点（可选）
         Vector3 localOffset = currentAttack.hitboxLocalOffset;
         localOffset.y += hitboxHeightOffset;
 
-        // 世界空间中心 = Player 位置 + 旋转 * 本地偏移
         Vector3 center = transform.position + transform.rotation * localOffset;
 
         debugHitboxCenter = center;
@@ -483,20 +486,18 @@ public class PlayerCombatController : MonoBehaviour, IAttackSource
                     if (dirLocal.sqrMagnitude < 0.0001f)
                         dirLocal = Vector3.forward;
 
-                    // 胶囊朝向 = Player 旋转 * 本地方向
                     Vector3 dirWorld = transform.rotation * dirLocal.normalized;
 
                     Vector3 p1 = center + dirWorld * halfHeight;
                     Vector3 p2 = center - dirWorld * halfHeight;
 
-                    debugRadius = halfHeight + radius;        // 用来画 debug 球的近似半径
+                    debugRadius = halfHeight + radius;
 
                     hits = Physics.OverlapCapsule(p1, p2, radius, enemyLayers);
                     break;
                 }
 
             default:
-                // 未知类型直接不打
                 return;
         }
 
@@ -512,9 +513,8 @@ public class PlayerCombatController : MonoBehaviour, IAttackSource
             if (col.TryGetComponent(out EnemyResources enemyRes))
             {
                 Vector3 hitPoint = col.ClosestPoint(center);
-                enemyRes.TakeDamage(currentAttack.damage, hitPoint,currentAttack.impact);
+                enemyRes.TakeDamage(currentAttack.damage, hitPoint, currentAttack.impact);
 
-                // 命中特效
                 PlayHitVfx(hitPoint);
                 Debug.Log($"Hit {enemyRes.name} at {hitPoint}");
 
@@ -523,8 +523,6 @@ public class PlayerCombatController : MonoBehaviour, IAttackSource
             }
         }
     }
-
-
 
     private void OnDrawGizmos()
     {
@@ -535,24 +533,20 @@ public class PlayerCombatController : MonoBehaviour, IAttackSource
         if (currentAttack == null)
             return;
 
-        // ✅ 跟 TickHitWindow 一样：只在 Active 且时间在 hitWindow 内才画
         if (currentState != AttackState.Active)
             return;
 
         float hitStart = currentAttack.hitStartTime;
         float hitEnd = currentAttack.hitEndTime;
 
-        // 整招时间线（0 开始）
         float t = attackElapsed;
         float endTime = hitEnd > 0f ? hitEnd : (currentAttack.startup + currentAttack.active);
 
-        // 不在窗口里就别画
         if (t < hitStart || t > endTime)
             return;
 
         Gizmos.color = Color.yellow;
 
-        // 和 DoHitbox 一样的中心计算
         Vector3 localOffset = currentAttack.hitboxLocalOffset;
         localOffset.y += hitboxHeightOffset;
         Vector3 center = transform.position + transform.rotation * localOffset;
@@ -593,11 +587,9 @@ public class PlayerCombatController : MonoBehaviour, IAttackSource
         Vector3 p1 = center + dir * half;
         Vector3 p2 = center - dir * half;
 
-        // Draw end spheres
         Gizmos.DrawWireSphere(p1, radius);
         Gizmos.DrawWireSphere(p2, radius);
 
-        // Draw cylinder sides
         int segments = 16;
         for (int i = 0; i < segments; i++)
         {
@@ -615,7 +607,6 @@ public class PlayerCombatController : MonoBehaviour, IAttackSource
             Gizmos.DrawLine(p1 + w0, p2 + w0);
         }
     }
-
 
 
     // =========================================================
@@ -662,15 +653,12 @@ public class PlayerCombatController : MonoBehaviour, IAttackSource
 
     public bool CanDodgeNow()
     {
-        // Idle：随时可以闪避
         if (currentState == AttackState.Idle)
             return true;
 
-        // Startup / Recovery：允许闪避，用来做 cancel
         if (currentState == AttackState.Startup || currentState == AttackState.Recovery)
             return true;
 
-        // Active：不允许闪避
         return false;
     }
 }

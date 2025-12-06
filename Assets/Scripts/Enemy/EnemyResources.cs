@@ -18,6 +18,7 @@ public class EnemyResources : MonoBehaviour
     public float CurrentHP => currentHP;
     public float MaxHP => stats != null ? stats.maxHP : 0f;
 
+    public bool IsDead => _isDead;
     private bool _isDead;
     private FlashOnHit _flashOnHit;
 
