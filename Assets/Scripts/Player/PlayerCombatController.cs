@@ -2,7 +2,7 @@
 using System;
 
 [DisallowMultipleComponent]
-public class PlayerCombatController : MonoBehaviour
+public class PlayerCombatController : MonoBehaviour, IAttackSource
 {
     [Header("Config")]
     [SerializeField] private WeaponConfig weaponConfig;
@@ -512,7 +512,7 @@ public class PlayerCombatController : MonoBehaviour
             if (col.TryGetComponent(out EnemyResources enemyRes))
             {
                 Vector3 hitPoint = col.ClosestPoint(center);
-                enemyRes.TakeDamage(currentAttack.damage, hitPoint);
+                enemyRes.TakeDamage(currentAttack.damage, hitPoint,currentAttack.impact);
 
                 // 命中特效
                 PlayHitVfx(hitPoint);

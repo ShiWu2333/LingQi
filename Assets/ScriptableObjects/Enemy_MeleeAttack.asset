@@ -13,14 +13,21 @@ MonoBehaviour:
   m_Name: Enemy_MeleeAttack
   m_EditorClassIdentifier: 
   attackId: enemy_slash_1
-  hitRange: 1
-  hitRadius: 1.2
+  hitboxShape: 0
+  hitboxLocalOffset: {x: 0, y: 0, z: 1}
+  hitboxRadius: 1
+  hitboxBoxHalfExtents: {x: 0.5, y: 0.5, z: 1}
+  hitboxCapsuleRadius: 0.7
+  hitboxCapsuleHeight: 2
+  hitboxCapsuleDirection: {x: 0, y: 0, z: 1}
   startup: 0.6
   active: 0.12
   recovery: 0.3
+  hitStartTime: 0.7
+  hitEndTime: 0.72
   staminaCost: 0
   manaCost: 0
-  damage: 12
+  damage: 1
   moveMultiplierStartup: 0.4
   moveMultiplierActive: 0.2
   moveMultiplierRecovery: 0.7
@@ -28,7 +35,6 @@ MonoBehaviour:
   stepDistance: 1
   stepDuration: 0.1
   cancelableAfter: 0.1
-  bufferWindow: 0.15
   poiseDamage: 0
   impact: 0
   comboGroupId: 
@@ -38,3 +44,29 @@ MonoBehaviour:
   comboInputCloseTime: 0
   animationClip: {fileID: 7400000, guid: d20a6692c13800d479789fab66ad54db, type: 2}
   animatorStateName: EnemyAttack
+  swordMotion:
+    startAngle: 0
+    endAngle: 0
+    radius: 1
+    idleAngle: 0
+    idleRadius: 1
+    anticipationOffset: 0
+    overshootOffset: 0
+    startPitch: 0
+    endPitch: 90
+    idlePitch: 0
+    anticipationPitchOffset: -30
+    overshootPitchOffset: 0
+    startRoll: 0
+    endRoll: 0
+    idleRoll: 0
+    anticipationRollOffset: 0
+    overshootRollOffset: 0
+  slashVFXPrefab: {fileID: 0}
+  splashVFXPrefab: {fileID: 0}
+  hitVFXPrefab: {fileID: 0}
+  slashLocalOffset: {x: 0, y: 0, z: 0}
+  slashLocalEulerOffset: {x: 0, y: 0, z: 0}
+  slashScale: 1
+  vfxBaseDuration: 1
+  vfxLifetime: 0.5

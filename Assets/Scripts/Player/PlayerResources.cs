@@ -75,7 +75,7 @@ public class PlayerResources : MonoBehaviour
     }
 
     // HP 操作
-    public void TakeDamage(float amount)
+    public void TakeDamage(float amount, Vector3 hitPoint, ImpactGrade impact)
     {
         if (IsDead || amount <= 0f) return;
 
@@ -90,10 +90,10 @@ public class PlayerResources : MonoBehaviour
 
         // 🔴 新增：真正扣血才广播受伤事件
         OnDamaged?.Invoke(amount);
-
+        PlayHitFeedback(hitPoint, amount, impact);
         if (_flashOnHit != null && amount > 0f)
         {
-            _flashOnHit.Trigger();
+            _flashOnHit.Trigger(hitPoint, impact);   // ✔ 触发受击后仰 & 闪光
         }
 
         if (currentHP <= 0f)
@@ -106,6 +106,15 @@ public class PlayerResources : MonoBehaviour
         {
             OnHPChanged?.Invoke(currentHP, MaxHP);
         }
+    }
+    private void PlayHitFeedback(Vector3 worldPos, float amount, ImpactGrade impact)
+    {
+        Vector3 popupPos = worldPos + Vector3.up * 0.8f;
+
+        if (_flashOnHit != null)
+            _flashOnHit.Trigger(worldPos, impact);
+
+        DamagePopupManager.Show(amount, popupPos);
     }
 
     public void Heal(float amount)

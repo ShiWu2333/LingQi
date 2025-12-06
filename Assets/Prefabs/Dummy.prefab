@@ -62,7 +62,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 8668e1ad93253c5439d0caad16acdd10, type: 2}
+  - {fileID: 2100000, guid: 8a3111b9b5c762a4fa3b79e21a96569b, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -386,10 +386,11 @@ GameObject:
   - component: {fileID: 1145405007143520894}
   - component: {fileID: 1488635078723527887}
   - component: {fileID: 9193948458579869895}
+  - component: {fileID: 8846881650773719322}
   - component: {fileID: 272390697275154834}
   - component: {fileID: 3747399459763288958}
-  - component: {fileID: 8846881650773719322}
   - component: {fileID: 2743650076271774015}
+  - component: {fileID: 7018046086069667645}
   m_Layer: 6
   m_Name: Dummy
   m_TagString: Untagged
@@ -459,34 +460,6 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!114 &272390697275154834
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8164034953176085580}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 00aa52770bfb31143bde6f447eac7904, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  flashColor: {r: 1, g: 1, b: 1, a: 1}
-  flashDuration: 0.08
---- !u!114 &3747399459763288958
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8164034953176085580}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ea6cd444704a9264e821762f48375293, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  stats: {fileID: 11400000, guid: 24dc5ff3d5df4014ab27ca470b4a63b5, type: 2}
-  currentHP: 0
 --- !u!114 &8846881650773719322
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -507,6 +480,35 @@ MonoBehaviour:
   debugDrawHitbox: 1
   state: 0
   stateTimer: 0
+--- !u!114 &272390697275154834
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8164034953176085580}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00aa52770bfb31143bde6f447eac7904, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
+  flashDuration: 0.08
+  recoil: {fileID: 0}
+--- !u!114 &3747399459763288958
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8164034953176085580}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea6cd444704a9264e821762f48375293, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  stats: {fileID: 11400000, guid: 24dc5ff3d5df4014ab27ca470b4a63b5, type: 2}
+  currentHP: 0
 --- !u!114 &2743650076271774015
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -524,3 +526,20 @@ MonoBehaviour:
   breakTimer: 2
   regenDelayTimer: 0
   currentContext: 0
+--- !u!114 &7018046086069667645
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8164034953176085580}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ef9af330376c6543982ea9663702e9c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxBackwardAngle: 30
+  maxSideAngle: 30
+  recoilInDuration: 0.075
+  recoilOutDuration: 0.075
+  scaleByImpact: 1

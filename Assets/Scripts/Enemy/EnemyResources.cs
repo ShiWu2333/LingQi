@@ -10,11 +10,8 @@ public class EnemyResources : MonoBehaviour
     [Header("Runtime (ReadOnly)")]
     [SerializeField] private float currentHP;
 
-    // HP 变化 & 死亡事件（原来就有）
     public event Action<float, float> OnHPChanged;
     public event Action OnDeath;
-
-    // 🔴 新增：受击事件（只管“受到了多少伤害”）
     public event Action<float> OnDamaged;
 
     public EnemyStatsConfig Stats => stats;
@@ -27,11 +24,9 @@ public class EnemyResources : MonoBehaviour
     private void Awake()
     {
         if (stats == null)
-        {
             Debug.LogError("[EnemyResources] EnemyStatsConfig is not assigned!", this);
-        }
 
-        _flashOnHit = GetComponent<FlashOnHit>();   // 别忘了缓存
+        _flashOnHit = GetComponent<FlashOnHit>();
 
         InitFromConfig();
     }
@@ -45,28 +40,23 @@ public class EnemyResources : MonoBehaviour
         OnHPChanged?.Invoke(currentHP, MaxHP);
     }
 
-    // 不带命中点（备用）
+    // ===== 对外接口：不带命中点（旧代码可继续用） =====
     public void TakeDamage(float amount)
     {
-        InternalTakeDamage(amount);
-        PlayHitFeedback(transform.position, amount);
+        // 默认把命中点设在自己身上，冲击力给一个默认值
+        TakeDamage(amount, transform.position, ImpactGrade.Small);
     }
 
-    // 带命中点：玩家 Hitbox 调这个
-    public void TakeDamage(float amount, Vector3 hitPoint)
-    {
-        InternalTakeDamage(amount);
-        PlayHitFeedback(hitPoint, amount);
-    }
-
-    private void InternalTakeDamage(float amount)
+    // ===== 对外接口：带命中点 + 冲击力（推荐） =====
+    public void TakeDamage(float amount, Vector3 hitPoint, ImpactGrade impact)
     {
         if (_isDead || amount <= 0f) return;
 
         currentHP -= amount;
-
-        // 🔴 新增：真正扣血时广播受击事件（包括致死一击）
         OnDamaged?.Invoke(amount);
+
+        // 受击反馈（闪白 + 后仰 + 痛感数字）
+        PlayHitFeedback(hitPoint, amount, impact);
 
         if (currentHP <= 0f)
         {
@@ -81,18 +71,15 @@ public class EnemyResources : MonoBehaviour
         }
     }
 
-    private void PlayHitFeedback(Vector3 worldPos, float amount)
+    private void PlayHitFeedback(Vector3 worldPos, float amount, ImpactGrade impact)
     {
-        // 稍微往上抬一点，让数字不要埋进地板
         Vector3 popupPos = worldPos + Vector3.up * 0.8f;
 
-        // 闪白
         if (_flashOnHit != null)
         {
-            _flashOnHit.Trigger();
+            _flashOnHit.Trigger(worldPos, impact);
         }
 
-        // 伤害数字
         DamagePopupManager.Show(amount, popupPos);
     }
 
@@ -100,7 +87,6 @@ public class EnemyResources : MonoBehaviour
     {
         Debug.Log("[EnemyResources] Enemy died.", this);
         OnDeath?.Invoke();
-
         gameObject.SetActive(false);
     }
 }

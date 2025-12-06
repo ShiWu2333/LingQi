@@ -5,14 +5,24 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public class FlashOnHit : MonoBehaviour
 {
+    [Header("Flash")]
     [SerializeField] private Color flashColor = Color.white;
     [SerializeField] private float flashDuration = 0.08f;
+
+    [Header("Recoil (Optional)")]
+    [Tooltip("可选：如果角色有 CharHitRecoil，将自动触发受击后仰效果")]
+    [SerializeField] private CharHitRecoil recoil;
 
     private Renderer[] renderers;
     private Color[] originalColors;
 
     private void Awake()
     {
+        // 找 Recoil（可选）
+        if (recoil == null)
+            recoil = GetComponentInChildren<CharHitRecoil>();
+
+        // 收集可闪光材质
         var all = GetComponentsInChildren<Renderer>();
         var list = new List<Renderer>();
         var colors = new List<Color>();
@@ -20,7 +30,6 @@ public class FlashOnHit : MonoBehaviour
         foreach (var r in all)
         {
             var mat = r.material;
-            // 只保留有 _Color 属性的材质，跳过 TMP 之类的
             if (mat != null && mat.HasProperty("_Color"))
             {
                 list.Add(r);
@@ -32,25 +41,32 @@ public class FlashOnHit : MonoBehaviour
         originalColors = colors.ToArray();
     }
 
-    public void Trigger()
+    /// <summary>
+    /// 外部调用受击闪光 + 后仰
+    /// </summary>
+    public void Trigger(Vector3 hitPoint, ImpactGrade impact)
     {
-        // 敌人已经被禁用时不要再开协程（下面解决第二个报错）
         if (!isActiveAndEnabled) return;
-        if (renderers == null || renderers.Length == 0) return;
 
-        StopAllCoroutines();
-        StartCoroutine(FlashRoutine());
+        // ① 视觉闪光
+        if (renderers != null && renderers.Length > 0)
+        {
+            StopAllCoroutines();
+            StartCoroutine(FlashRoutine());
+        }
+
+        // ② 受击后仰（若角色有此组件）
+        if (recoil != null)
+            recoil.PlayRecoil(hitPoint, impact);
     }
 
     private IEnumerator FlashRoutine()
     {
-        // 变色
+        // 变亮
         for (int i = 0; i < renderers.Length; i++)
         {
             if (renderers[i] != null)
-            {
                 renderers[i].material.color = flashColor;
-            }
         }
 
         yield return new WaitForSeconds(flashDuration);
@@ -59,9 +75,7 @@ public class FlashOnHit : MonoBehaviour
         for (int i = 0; i < renderers.Length; i++)
         {
             if (renderers[i] != null)
-            {
                 renderers[i].material.color = originalColors[i];
-            }
         }
     }
 }

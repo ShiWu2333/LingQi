@@ -1,25 +1,31 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using UnityEngine;
-using System;
 using UnityEngine.AI;
 
 [RequireComponent(typeof(NavMeshAgent))]
 [RequireComponent(typeof(EnemyResources))]
-public class EnemyAIController : MonoBehaviour
+public class EnemyAIController : MonoBehaviour, IAttackSource
 {
     private enum EnemyState
     {
         Idle,
         Chase,
         Attacking,
+        Stagger,    // 硬直
         Cooldown
     }
 
     [Header("Config")]
-    [SerializeField] private LayerMask playerLayer;   // 只检测玩家
+    [SerializeField] private LayerMask playerLayer;
     [SerializeField] private float hitboxRadius = 1.0f;
     [SerializeField] private float hitboxHeightOffset = 1.0f;
     [SerializeField] private bool debugDrawHitbox = false;
+
+    [Header("Stagger Config")]
+    [SerializeField] private float lightStaggerTime = 0.1f;
+    [SerializeField] private float mediumStaggerTime = 0.35f;
+    [SerializeField] private float heavyStaggerTime = 0.6f;
 
     [Header("Runtime (ReadOnly)")]
     [SerializeField] private EnemyState state = EnemyState.Idle;
@@ -27,15 +33,23 @@ public class EnemyAIController : MonoBehaviour
 
     private NavMeshAgent _agent;
     private EnemyResources _resources;
+    private EnemyPoiseController _poise;
     private Transform _player;
-    private AttackData _attackData;   // 目前只用一个默认攻击
+    private AttackData _attackData;
+
+    [Header("Telegraph")]
+    [SerializeField] private AttackTelegraph _telegraph;
+
     public string CurrentDebugState => state.ToString();
-    // 攻击生效阶段标记 + 最近一次 hitbox 数据
+
+    // 攻击相关
     private bool isAttackActive;
     private Vector3 lastHitboxCenter;
     private float lastHitboxRadius;
-    private EnemyPoiseController _poise;
-    private Coroutine _attackRoutine;    // 记住当前攻击协程
+    private Coroutine _attackRoutine;
+
+    // 硬直
+    private float _staggerDuration;
 
     public event Action<AttackData> OnAttackStarted;
     public event Action<AttackData> OnAttackEnded;
@@ -46,6 +60,9 @@ public class EnemyAIController : MonoBehaviour
         _resources = GetComponent<EnemyResources>();
         _poise = GetComponent<EnemyPoiseController>();
 
+        if (_telegraph == null)
+            _telegraph = GetComponentInChildren<AttackTelegraph>();
+
         if (_resources.Stats == null)
         {
             Debug.LogError("[EnemyAI] EnemyStatsConfig is missing on EnemyResources.", this);
@@ -54,18 +71,7 @@ public class EnemyAIController : MonoBehaviour
         }
 
         if (_poise != null)
-        {
             _poise.OnImpactReaction += HandleImpactReaction;
-        }
-        _agent = GetComponent<NavMeshAgent>();
-        _resources = GetComponent<EnemyResources>();
-
-        if (_resources.Stats == null)
-        {
-            Debug.LogError("[EnemyAI] EnemyStatsConfig is missing on EnemyResources.", this);
-            enabled = false;
-            return;
-        }
 
         _attackData = _resources.Stats.defaultAttack;
         if (_attackData == null)
@@ -73,42 +79,33 @@ public class EnemyAIController : MonoBehaviour
             Debug.LogWarning("[EnemyAI] defaultAttack is not assigned in EnemyStatsConfig.", this);
         }
 
-        // NavMeshAgent 基础参数从 stats 读
+        // NavMeshAgent 参数
         _agent.speed = _resources.Stats.chaseSpeed;
         _agent.angularSpeed = _resources.Stats.rotateSpeed;
-        _agent.stoppingDistance = _resources.Stats.attackRange * 0.8f; // 稍微早一点停下
+        _agent.stoppingDistance = _resources.Stats.attackRange * 0.8f;
     }
 
     private void Start()
     {
-        // 自动找玩家（要求 Player 物体 Tag = "Player"）
-        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+        var playerObj = GameObject.FindGameObjectWithTag("Player");
         if (playerObj != null)
-        {
             _player = playerObj.transform;
-        }
         else
-        {
             Debug.LogWarning("[EnemyAI] No object with Tag=Player found.", this);
-        }
 
         state = EnemyState.Idle;
         stateTimer = 0f;
 
-        // 敌人死亡时禁用 AI
         _resources.OnDeath += HandleDeath;
     }
 
     private void OnDestroy()
     {
         if (_resources != null)
-        {
             _resources.OnDeath -= HandleDeath;
-        }
+
         if (_poise != null)
-        {
             _poise.OnImpactReaction -= HandleImpactReaction;
-        }
     }
 
     private void Update()
@@ -120,65 +117,73 @@ public class EnemyAIController : MonoBehaviour
 
         switch (state)
         {
-            case EnemyState.Idle:
-                TickIdle();
-                break;
-            case EnemyState.Chase:
-                TickChase();
-                break;
-            case EnemyState.Attacking:
-                // 攻击过程用协程控制，不在这里更新
-                break;
-            case EnemyState.Cooldown:
-                TickCooldown();
-                break;
+            case EnemyState.Idle: TickIdle(); break;
+            case EnemyState.Chase: TickChase(); break;
+            case EnemyState.Attacking: /* 协程驱动 */   break;
+            case EnemyState.Stagger: TickStagger(); break;
+            case EnemyState.Cooldown: TickCooldown(); break;
         }
     }
+
+    // ================== 受击 / 硬直 ==================
 
     private void HandleImpactReaction(ImpactReaction reaction)
     {
         switch (reaction)
         {
             case ImpactReaction.None:
-                // 完全无事发生（真霸体）
                 break;
 
             case ImpactReaction.LightStagger:
-                // 轻微硬直：不打断动作，但触发一个轻微受击反馈
                 PlaySmallStagger();
                 break;
 
             case ImpactReaction.MediumStagger:
-                // 中硬直：打断当前动作 + 进入受击状态
-                InterruptCurrentAction();
+                EnterStagger(mediumStaggerTime);
                 PlayMediumStagger();
                 break;
 
             case ImpactReaction.HeavyStagger:
-                // 大硬直：打断当前动作 + 进入大受击/击退
-                InterruptCurrentAction();
+                EnterStagger(heavyStaggerTime);
                 PlayLargeStagger();
                 break;
         }
     }
-    private void PlaySmallStagger()
+
+    private void EnterStagger(float duration)
     {
-        // TODO: 将来绑一个轻微抖动动画
-        // 现在可以先什么都不干，或者简单 log 一下
-        // Debug.Log("[Enemy] SmallStagger");
+        InterruptCurrentAction();
+
+        _staggerDuration = Mathf.Max(0f, duration);
+
+        if (_agent != null && _agent.enabled && _agent.isOnNavMesh)
+            _agent.isStopped = true;
+
+        SwitchState(EnemyState.Stagger);
     }
 
-    private void PlayMediumStagger()
+    private void TickStagger()
     {
-        // TODO: 将来播放“受击打断”动画
-        // 当前原型可以先让 AI 在原地停一下之类
+        if (stateTimer >= _staggerDuration)
+        {
+            if (_agent != null && _agent.enabled && _agent.isOnNavMesh)
+                _agent.isStopped = false;
+
+            float dist = Vector3.Distance(transform.position, _player.position);
+            if (dist <= _resources.Stats.detectionRange)
+                SwitchState(EnemyState.Chase);
+            else
+                SwitchState(EnemyState.Idle);
+        }
     }
 
-    private void PlayLargeStagger()
-    {
-        // TODO: 将来播放“受击 + 击退”动画
-    }
+    private void PlaySmallStagger() { }
+    private void PlayMediumStagger() { }
+    private void PlayLargeStagger() { }
 
+    /// <summary>
+    /// 打断当前攻击，不改变状态（由调用方决定进什么状态）
+    /// </summary>
     private void InterruptCurrentAction()
     {
         if (_attackRoutine != null)
@@ -189,50 +194,56 @@ public class EnemyAIController : MonoBehaviour
 
         isAttackActive = false;
 
-        // 暂时：打断后进入冷却 / 或硬直状态（之后你可能会拆出 Stagger 状态）
-        SwitchState(EnemyState.Cooldown);
-        stateTimer = 0f;
+        // 关键点：这里不再 Reset Telegraph，避免同一段时间内多次起手导致 Hint 刷屏
+        // if (_telegraph != null)
+        //     _telegraph.ResetForNextAttack();
+
+        if (_attackData != null)
+            OnAttackEnded?.Invoke(_attackData);
     }
+
+    // ================== 状态逻辑 ==================
 
     private void TickIdle()
     {
         float dist = Vector3.Distance(transform.position, _player.position);
         if (dist <= _resources.Stats.detectionRange)
-        {
             SwitchState(EnemyState.Chase);
-        }
     }
 
     private void TickChase()
     {
+        if (_agent == null || !_agent.enabled || !_agent.isOnNavMesh)
+            return;
+
         float dist = Vector3.Distance(transform.position, _player.position);
 
         if (dist > _resources.Stats.detectionRange * 1.5f)
         {
-            // 跑远了，回 Idle
             _agent.isStopped = true;
             SwitchState(EnemyState.Idle);
             return;
         }
 
-        // 追踪玩家
         _agent.isStopped = false;
         _agent.speed = _resources.Stats.chaseSpeed;
         _agent.SetDestination(_player.position);
 
-        // 转向玩家
-        Vector3 dir = (_player.position - transform.position);
+        Vector3 dir = _player.position - transform.position;
         dir.y = 0f;
         if (dir.sqrMagnitude > 0.001f)
         {
             Quaternion targetRot = Quaternion.LookRotation(dir, Vector3.up);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, _resources.Stats.rotateSpeed * Time.deltaTime);
+            transform.rotation = Quaternion.Slerp(
+                transform.rotation,
+                targetRot,
+                _resources.Stats.rotateSpeed * Time.deltaTime);
         }
 
-        // 进入攻击范围
         if (dist <= _resources.Stats.attackRange && _attackData != null)
         {
             _agent.isStopped = true;
+
             if (_attackRoutine == null)
             {
                 _attackRoutine = StartCoroutine(CoDoAttack());
@@ -245,6 +256,13 @@ public class EnemyAIController : MonoBehaviour
         SwitchState(EnemyState.Attacking);
         stateTimer = 0f;
 
+        // 一进入攻击协程就触发 Telegraph（内部还有 telegraphDelay）
+        if (_telegraph != null)
+        {
+            Debug.Log("[EnemyAI] BeginAttackTelegraph()");
+            _telegraph.BeginAttackTelegraph();
+        }
+
         if (_attackData != null)
             OnAttackStarted?.Invoke(_attackData);
 
@@ -252,7 +270,7 @@ public class EnemyAIController : MonoBehaviour
         float active = _attackData.active;
         float recovery = _attackData.recovery;
 
-        // Startup：前摇
+        // Startup
         float t = 0f;
         while (t < startup)
         {
@@ -260,7 +278,7 @@ public class EnemyAIController : MonoBehaviour
             yield return null;
         }
 
-        // Active：出刀 + 伤害检测（这段时间 Gizmo 也显示）
+        // Active：真正出刀
         isAttackActive = true;
         DoHitbox();
 
@@ -272,7 +290,7 @@ public class EnemyAIController : MonoBehaviour
         }
         isAttackActive = false;
 
-        // Recovery：后摇
+        // Recovery
         t = 0f;
         while (t < recovery)
         {
@@ -283,7 +301,9 @@ public class EnemyAIController : MonoBehaviour
         if (_attackData != null)
             OnAttackEnded?.Invoke(_attackData);
 
-        // 攻击结束，进入冷却
+        if (_telegraph != null)
+            _telegraph.ResetForNextAttack();
+
         SwitchState(EnemyState.Cooldown);
         stateTimer = 0f;
 
@@ -293,38 +313,44 @@ public class EnemyAIController : MonoBehaviour
     private void TickCooldown()
     {
         if (stateTimer >= _resources.Stats.attackInterval)
-        {
-            // 冷却结束，重新判断是否追击/攻击
             SwitchState(EnemyState.Chase);
-        }
     }
+
+    // ================== Hitbox ==================
 
     private void DoHitbox()
     {
-        // 命中球心位置
         Vector3 center = transform.position
                          + transform.forward * _resources.Stats.attackRange * 0.6f
                          + Vector3.up * hitboxHeightOffset;
 
         float radius = hitboxRadius;
 
-        // 记录下来给 Gizmo 用
         lastHitboxCenter = center;
         lastHitboxRadius = radius;
 
-        Collider[] hits = Physics.OverlapSphere(center, radius, playerLayer, QueryTriggerInteraction.Ignore);
+        Collider[] hits = Physics.OverlapSphere(
+            center,
+            radius,
+            playerLayer,
+            QueryTriggerInteraction.Ignore);
 
         if (debugDrawHitbox)
-        {
             Debug.Log($"[EnemyAI] DoHitbox: hits={hits.Length}");
-        }
 
-        for (int i = 0; i < hits.Length; i++)
+        foreach (var col in hits)
         {
-            var col = hits[i];
+            if (col == null) continue;
+
             if (col.TryGetComponent(out PlayerResources playerRes))
             {
-                playerRes.TakeDamage(_attackData.damage);
+                Vector3 hitPoint = col.ClosestPoint(center);
+
+                ImpactGrade impact = _attackData != null
+                    ? _attackData.impact
+                    : ImpactGrade.Medium;
+
+                playerRes.TakeDamage(_attackData.damage, hitPoint, impact);
             }
         }
     }
@@ -337,15 +363,21 @@ public class EnemyAIController : MonoBehaviour
 
     private void HandleDeath()
     {
-        _agent.isStopped = true;
-        _agent.enabled = false;
+        if (_telegraph != null)
+            _telegraph.ResetForNextAttack();
+
+        if (_agent != null && _agent.enabled && _agent.isOnNavMesh)
+        {
+            _agent.isStopped = true;
+            _agent.enabled = false;
+        }
+
         enabled = false;
     }
 
     private void OnDrawGizmos()
     {
-        if (!debugDrawHitbox) return;
-        if (!isAttackActive) return;
+        if (!debugDrawHitbox || !isAttackActive) return;
 
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(lastHitboxCenter, lastHitboxRadius);

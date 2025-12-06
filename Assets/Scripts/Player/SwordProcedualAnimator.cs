@@ -1,20 +1,25 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 [DisallowMultipleComponent]
-public class PlayerSwordProceduralAnimator : MonoBehaviour
+public class SwordProceduralAnimator : MonoBehaviour
 {
-    [Header("Refs")]
-    [SerializeField] private PlayerCombatController combat;
+    [Header("Attack Source (Player / Enemy)")]
+    [Tooltip("æ‹– PlayerCombatController æˆ– EnemyAIController è¿›æ¥ï¼Œåªè¦å®ç° IAttackSource å°±è¡Œ")]
+    [SerializeField] private MonoBehaviour attackSourceComponent;
 
-    // ¹¥»÷Êı¾İ
+    private IAttackSource _attackSource;
+
+    // æ”»å‡»æ•°æ®
     private AttackData currentAttack;
     private SwordMotionConfig motion;
 
     private float timer;
     private bool playing;
 
-    // ------------ Yaw£¨Ë®Æ½·½Ïò£¬ÈÆ Y£© ------------
-    private float _baseLocalYaw;
+    // ---------- åŸºç¡€æ—‹è½¬ ----------
+    private Quaternion _baseLocalRotation;   // åˆå§‹å±€éƒ¨æ—‹è½¬ï¼ˆæ‰€æœ‰ç¨‹åºåŒ–æ—‹è½¬éƒ½å åŠ åœ¨è¿™ä¸Šé¢ï¼‰
+
+    // ---------- Yawï¼ˆæ°´å¹³æ–¹å‘ï¼Œç»• Yï¼‰ ----------
     private float _currentYaw;
     private float _fromYaw;
     private float _startYaw;
@@ -23,8 +28,7 @@ public class PlayerSwordProceduralAnimator : MonoBehaviour
     private float _overshootYaw;
     private float _idleYaw;
 
-    // ------------ Pitch£¨´¹Ö±·½Ïò£¬ÈÆ X£© ------------
-    private float _baseLocalPitch;
+    // ---------- Pitchï¼ˆå‚ç›´ï¼Œç»• Xï¼‰ ----------
     private float _currentPitch;
     private float _fromPitch;
     private float _startPitch;
@@ -33,8 +37,7 @@ public class PlayerSwordProceduralAnimator : MonoBehaviour
     private float _overshootPitch;
     private float _idlePitch;
 
-    // ------------ Roll£¨Å¤×ª£¬ÈÆ Z£© ------------
-    private float _baseLocalRoll;
+    // ---------- Rollï¼ˆæ‰­è½¬ï¼Œç»• Zï¼‰ ----------
     private float _currentRoll;
     private float _fromRoll;
     private float _startRoll;
@@ -43,38 +46,39 @@ public class PlayerSwordProceduralAnimator : MonoBehaviour
     private float _overshootRoll;
     private float _idleRoll;
 
-    // »Ø idle µÄ×´Ì¬
+    // å› idle
     private bool _returningToIdle;
     private float _idleReturnTimer;
     [SerializeField] private float idleReturnDuration = 0.25f;
 
     private void OnEnable()
     {
-        if (combat == null)
-            combat = GetComponentInParent<PlayerCombatController>();
+        if (attackSourceComponent != null)
+            _attackSource = attackSourceComponent as IAttackSource;
 
-        if (combat != null)
+        if (_attackSource == null)
         {
-            combat.OnAttackStarted += HandleAttackStarted;
-            combat.OnAttackEnded += HandleAttackEnded;
+            Debug.LogWarning("[SwordProceduralAnimator] attackSourceComponent å¿…é¡»å®ç° IAttackSource", this);
+            return;
         }
+
+        _attackSource.OnAttackStarted += HandleAttackStarted;
+        _attackSource.OnAttackEnded += HandleAttackEnded;
     }
 
     private void OnDisable()
     {
-        if (combat != null)
+        if (_attackSource != null)
         {
-            combat.OnAttackStarted -= HandleAttackStarted;
-            combat.OnAttackEnded -= HandleAttackEnded;
+            _attackSource.OnAttackStarted -= HandleAttackStarted;
+            _attackSource.OnAttackEnded -= HandleAttackEnded;
         }
     }
 
     private void Start()
     {
-        Vector3 e = transform.localEulerAngles;
-        _baseLocalYaw = e.y;
-        _baseLocalPitch = e.x;
-        _baseLocalRoll = e.z;
+        // ç¼“å­˜åˆå§‹å±€éƒ¨æ—‹è½¬
+        _baseLocalRotation = transform.localRotation;
 
         _currentYaw = 0f;
         _currentPitch = 0f;
@@ -94,7 +98,7 @@ public class PlayerSwordProceduralAnimator : MonoBehaviour
             return;
         }
 
-        // ---- Yaw ----
+        // ---------- Yaw ----------
         _fromYaw = _currentYaw;
         _startYaw = motion.startAngle;
         _endYaw = motion.endAngle;
@@ -102,7 +106,7 @@ public class PlayerSwordProceduralAnimator : MonoBehaviour
         _overshootYaw = motion.endAngle + motion.overshootOffset;
         _idleYaw = motion.idleAngle;
 
-        // ---- Pitch ----
+        // ---------- Pitch ----------
         _fromPitch = _currentPitch;
         _startPitch = motion.startPitch;
         _endPitch = motion.endPitch;
@@ -110,7 +114,7 @@ public class PlayerSwordProceduralAnimator : MonoBehaviour
         _overshootPitch = motion.endPitch + motion.overshootPitchOffset;
         _idlePitch = motion.idlePitch;
 
-        // ---- Roll ----
+        // ---------- Roll ----------
         _fromRoll = _currentRoll;
         _startRoll = motion.startRoll;
         _endRoll = motion.endRoll;
@@ -120,7 +124,6 @@ public class PlayerSwordProceduralAnimator : MonoBehaviour
 
         timer = 0f;
         playing = true;
-
         _returningToIdle = false;
     }
 
@@ -188,7 +191,7 @@ public class PlayerSwordProceduralAnimator : MonoBehaviour
         }
     }
 
-    // -------- ¸÷½×¶ÎÇúÏß --------
+    // ---------- å„é˜¶æ®µ ----------
 
     private void UpdateStartup(float t)
     {
@@ -223,7 +226,7 @@ public class PlayerSwordProceduralAnimator : MonoBehaviour
         ApplyAngles(yaw, pitch, roll);
     }
 
-    // -------- Êµ¼ÊĞ´Èë Transform --------
+    // ---------- å®é™…å†™å…¥ Transform ----------
 
     private void ApplyAngles(float yaw, float pitch, float roll)
     {
@@ -231,14 +234,15 @@ public class PlayerSwordProceduralAnimator : MonoBehaviour
         _currentPitch = pitch;
         _currentRoll = roll;
 
-        Vector3 e = transform.localEulerAngles;
-        e.y = _baseLocalYaw + yaw;   // Ë®Æ½
-        e.x = _baseLocalPitch + pitch; // ´¹Ö±
-        e.z = _baseLocalRoll + roll;  // Å¤×ª
-        transform.localEulerAngles = e;
+        Quaternion yawRot = Quaternion.AngleAxis(yaw, Vector3.up);       // Y
+        Quaternion pitchRot = Quaternion.AngleAxis(pitch, Vector3.right);    // X
+        Quaternion rollRot = Quaternion.AngleAxis(roll, Vector3.forward);  // Z
+
+        // å åŠ é¡ºåºï¼šå…ˆ yaw å† pitch å† rollï¼ˆå¯ä»¥æŒ‰æ„Ÿè§‰è°ƒæ•´ï¼‰
+        transform.localRotation = _baseLocalRotation * yawRot * pitchRot * rollRot;
     }
 
-    // ÇúÏß¹¤¾ß£ºSlow In / Slow Out
+    // æ›²çº¿
     private float EaseInQuad(float x) => x * x;
     private float EaseOutQuad(float x) => 1f - (1f - x) * (1f - x);
 }

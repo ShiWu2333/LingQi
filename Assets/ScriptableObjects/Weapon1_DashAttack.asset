@@ -60,8 +60,8 @@ MonoBehaviour:
     startRoll: 0
     endRoll: 180
     idleRoll: 0
-    anticipationRollOffset: 0
-    overshootRollOffset: 0
+    anticipationRollOffset: -20
+    overshootRollOffset: 20
   slashVFXPrefab: {fileID: 26357312617216343, guid: 43a6fff530ea41e47b72e332549cc9d2, type: 3}
   splashVFXPrefab: {fileID: 3528051367564371829, guid: dca59b7a4630b9f40b5264cd8458014a, type: 3}
   hitVFXPrefab: {fileID: 833273125943498317, guid: 9eaf97f03c39c9743a286e2ac3725124, type: 3}
