@@ -6,10 +6,20 @@ public class PlayerCombatController : MonoBehaviour, IAttackSource
 {
     [Header("Config")]
     [SerializeField] private WeaponConfig weaponConfig;
+
     [Header("VFX (Test)")]
     [SerializeField] private Transform slashSocket;
+
     [Header("Hit VFX")]
     [SerializeField] private float hitVfxHeightOffset = 0.4f;  // 命中特效往上抬一点，避免埋在胶囊里
+
+    [Header("Projectile")]
+    [SerializeField] private Transform projectileSpawnPoint;
+
+    // Projectile 运行时
+    private int projectilesFired;            // 当前 attack 已经发射了几发（用于三连发）
+    private float projectileNextFireTime;    // 下一发的时间（相对 Active 起点）
+    private float projectileElapsed;         // Active 阶段已经过去的时间（给投射物用）
 
     [Header("Input")]
     [SerializeField] private KeyCode lightKey = KeyCode.Mouse0;
@@ -109,7 +119,6 @@ public class PlayerCombatController : MonoBehaviour, IAttackSource
                 attackBuffered = false;
             }
         }
-
         // -------- 重攻击 --------
         else if (Input.GetKeyDown(heavyKey))
         {
@@ -143,8 +152,12 @@ public class PlayerCombatController : MonoBehaviour, IAttackSource
 
         ApplyMovementMultiplier(attack.moveMultiplierStartup);
 
-
         OnAttackStarted?.Invoke(attack);
+
+        // ===== Projectile 计时重置（从整个攻击起算，后面 Active 再单独计）=====
+        projectilesFired = 0;
+        projectileElapsed = 0f;
+        projectileNextFireTime = attack != null ? attack.hitStartTime : 0f;
     }
 
 
@@ -159,7 +172,7 @@ public class PlayerCombatController : MonoBehaviour, IAttackSource
         stateTimer += dt;
         attackElapsed += dt;
 
-        TickHitWindow();   // 每帧检查 hit window
+        TickHitWindow();   // 每帧检查 hit window（仅近战）
 
         switch (currentState)
         {
@@ -190,12 +203,15 @@ public class PlayerCombatController : MonoBehaviour, IAttackSource
 
 
     // =========================================================
-    // HIT WINDOW 控制
+    // HIT WINDOW 控制（只管近战）
     // =========================================================
     private void TickHitWindow()
     {
         if (currentAttack == null)
             return;
+
+        if (currentAttack.isProjectileAttack)
+            return; // projectile 走自己的 firing 系统，不走近战 hitbox
 
         // 已经打过一次，这一招就不再打
         if (hasHitThisAttack)
@@ -268,10 +284,13 @@ public class PlayerCombatController : MonoBehaviour, IAttackSource
         return true;
     }
 
-    public void PlayHitVfx(Vector3 hitPoint)
+    /// <summary>
+    /// 命中 VFX（近战 / Projectile 共用）
+    /// </summary>
+    public void PlayHitVfx(Vector3 hitPoint, AttackData attack)
     {
-        if (currentAttack == null) return;
-        if (currentAttack.hitVFXPrefab == null) return;
+        if (attack == null) return;
+        if (attack.hitVFXPrefab == null) return;
 
         // 1. 把命中点稍微往上抬一点，避免埋在敌人胶囊里
         Vector3 pos = hitPoint + Vector3.up * hitVfxHeightOffset;
@@ -285,10 +304,10 @@ public class PlayerCombatController : MonoBehaviour, IAttackSource
         Quaternion rot = Quaternion.LookRotation(dir, Vector3.up);
 
         // 3. 实例化一次，不挂在任何父节点下面
-        GameObject vfx = Instantiate(currentAttack.hitVFXPrefab, pos, rot);
+        GameObject vfx = Instantiate(attack.hitVFXPrefab, pos, rot);
 
         // 4. 自动销毁，时间可以复用 vfxLifetime
-        float life = currentAttack.vfxLifetime > 0f ? currentAttack.vfxLifetime : 0.6f;
+        float life = attack.vfxLifetime > 0f ? attack.vfxLifetime : 0.6f;
         Destroy(vfx, life);
     }
 
@@ -307,11 +326,14 @@ public class PlayerCombatController : MonoBehaviour, IAttackSource
         if (movement != null)
             movement.LockFacing();
 
-        // 挥砍弧线，跟着剑转
+        // Projectile 的起手也可以沿用 Slash / Splash VFX
         SpawnSlashVfx();
-
-        // 起手溅射，不跟着剑转
         SpawnSplashVfx();
+
+        // ⭐ Projectile 的计时从 Active 开始重新算，保证间隔和你设的一致
+        projectileElapsed = 0f;
+        projectileNextFireTime = currentAttack != null ? currentAttack.hitStartTime : 0f;
+        projectilesFired = 0;
     }
 
 
@@ -434,8 +456,80 @@ public class PlayerCombatController : MonoBehaviour, IAttackSource
 
     private void UpdateActive(float dt)
     {
-        // 若要 continuous hit，可在这里加入 DoHitbox()
+        // 若要 continuous melee hit，可在这里加入 DoHitbox()
+
+        // ⭐ projectile attack firing（从 Active 开始用自己的计时）
+        if (currentAttack != null && currentAttack.isProjectileAttack)
+        {
+            TickProjectileAttack(dt);
+        }
     }
+
+    private void TickProjectileAttack(float dt)
+    {
+        if (currentAttack == null || !currentAttack.isProjectileAttack)
+            return;
+
+        if (currentState != AttackState.Active)
+            return;
+
+        projectileElapsed += dt;        // Active 内计时
+        int total = Mathf.Max(1, currentAttack.projectileCount);
+        if (projectilesFired >= total)
+            return;
+
+        float t = projectileElapsed;
+        float interval = Mathf.Max(0.01f, currentAttack.projectileInterval);
+
+        // 还没到下一发时间
+        if (t < projectileNextFireTime)
+            return;
+
+        // 到了就发一发
+        FireProjectile();
+        projectilesFired++;
+
+        // 预定下一发的时间（仍然是 Active 内的绝对时间）
+        projectileNextFireTime += interval;
+    }
+
+
+    private void FireProjectile()
+    {
+        if (currentAttack == null || currentAttack.projectilePrefab == null)
+            return;
+
+        // 计算发射点
+        Vector3 spawnPos;
+        if (projectileSpawnPoint != null)
+            spawnPos = projectileSpawnPoint.position;
+        else
+            spawnPos = transform.position +
+                       transform.rotation * currentAttack.projectileSpawnOffset;
+
+        // 初始朝向：锁定目标优先，其次鼠标
+        Vector3 dir = transform.forward;
+        if (movement != null)
+            dir = movement.GetAimDirection();
+        Quaternion rot = Quaternion.LookRotation(dir, Vector3.up);
+
+        GameObject go = Instantiate(currentAttack.projectilePrefab, spawnPos, rot);
+
+        var proj = go.GetComponent<Projectile>();
+        if (proj != null)
+        {
+            Transform homingTarget = null;
+            if (currentAttack.projectileHoming &&
+                movement != null &&
+                movement.CurrentLockOnTarget != null)
+            {
+                homingTarget = movement.CurrentLockOnTarget;
+            }
+
+            proj.Init(currentAttack, enemyLayers, this, homingTarget);
+        }
+    }
+
 
 
     // =========================================================
@@ -515,7 +609,8 @@ public class PlayerCombatController : MonoBehaviour, IAttackSource
                 Vector3 hitPoint = col.ClosestPoint(center);
                 enemyRes.TakeDamage(currentAttack.damage, hitPoint, currentAttack.impact);
 
-                PlayHitVfx(hitPoint);
+                // ⭐ 近战命中也用同一个 VFX 函数
+                PlayHitVfx(hitPoint, currentAttack);
                 Debug.Log($"Hit {enemyRes.name} at {hitPoint}");
 
                 if (col.TryGetComponent(out EnemyPoiseController poise))

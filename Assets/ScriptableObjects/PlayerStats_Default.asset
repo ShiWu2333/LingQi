@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHP: 200
   moveSpeed: 5
-  maxStamina: 100
+  maxStamina: 200
   staminaRegenPerSecond: 30
   staminaRegenDelayAfterUse: 0.4
-  maxMana: 50
-  manaRegenPerSecond: 3
+  maxMana: 200
+  manaRegenPerSecond: 50
   maxPoise: 100
   poiseRegenDelay: 2
   poiseRegenPerSecond: 30

@@ -1,0 +1,82 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 23b7e4405d614c4418e30b97f39c9b4b, type: 3}
+  m_Name: Weapon3_Light2
+  m_EditorClassIdentifier: 
+  attackId: Weapon3_Light2
+  hitboxShape: 2
+  hitboxLocalOffset: {x: 0, y: 1, z: 2.2}
+  hitboxRadius: 1
+  hitboxBoxHalfExtents: {x: 0.5, y: 0.5, z: 1}
+  hitboxCapsuleRadius: 2.09
+  hitboxCapsuleHeight: 2.93
+  hitboxCapsuleDirection: {x: 1, y: 0, z: 0}
+  startup: 0.5
+  active: 0.15
+  recovery: 0.7
+  hitStartTime: 0.6
+  hitEndTime: 0.65
+  staminaCost: 8
+  manaCost: 0
+  damage: 30
+  moveMultiplierStartup: 0
+  moveMultiplierActive: 0
+  moveMultiplierRecovery: 0
+  stepForward: 0
+  stepDistance: 0.5
+  stepDuration: 0.1
+  cancelableAfter: 9.95
+  poiseDamage: 15
+  impact: 0
+  comboGroupId: GreatSword_L
+  comboStepIndex: 1
+  nextCombo: {fileID: 11400000, guid: 96a4fe0d2fac46b43a11528421864053, type: 2}
+  comboInputOpenTime: 0.8
+  comboInputCloseTime: 1.35
+  animationClip: {fileID: 7400000, guid: 7955a24b57357004ca47200c7aaeb73d, type: 2}
+  animatorStateName: LightAttack
+  swordMotion:
+    startAngle: -180
+    endAngle: 0
+    radius: 1
+    idleAngle: 0
+    idleRadius: 0.8
+    anticipationOffset: -20
+    overshootOffset: 20
+    startPitch: 0
+    endPitch: 0
+    idlePitch: 0
+    anticipationPitchOffset: 0
+    overshootPitchOffset: 0
+    startRoll: 0
+    endRoll: 0
+    idleRoll: 0
+    anticipationRollOffset: 0
+    overshootRollOffset: 0
+  slashVFXPrefab: {fileID: 6389406066330802589, guid: 5ef8d476ac4025a4e85cc5e7c5004889, type: 3}
+  splashVFXPrefab: {fileID: 0}
+  hitVFXPrefab: {fileID: 833273125943498317, guid: 9eaf97f03c39c9743a286e2ac3725124, type: 3}
+  slashLocalOffset: {x: 0, y: 0, z: 0}
+  slashLocalEulerOffset: {x: -90, y: 180, z: 0}
+  slashScale: 0.75
+  vfxBaseDuration: 1
+  vfxLifetime: 0.35
+  isProjectileAttack: 0
+  projectilePrefab: {fileID: 0}
+  projectileSpawnOffset: {x: 0, y: 1, z: 0.6}
+  projectileSpeed: 16
+  projectileLifeTime: 3
+  projectileCount: 1
+  projectileInterval: 0.12
+  projectileHoming: 0
+  projectileHomingTurnSpeedDeg: 360
+  projectileHomingHeightOffset: 0.8

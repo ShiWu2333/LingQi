@@ -323,4 +323,49 @@ public class PlayerMovement : MonoBehaviour
     {
         isFacingLocked = false;
     }
+
+    /// <summary>
+    /// 给 Combat / Projectile 用的统一“瞄准方向”。
+    /// 优先级：
+    /// 1）锁定目标（lockOnTarget）
+    /// 2）鼠标指向的地面位置
+    /// 3）当前朝向 forward
+    /// </summary>
+    public Vector3 GetAimDirection()
+    {
+        // 1）如果有锁定目标 → 朝着锁定目标
+        if (lockOnTarget != null)
+        {
+            Vector3 dirToTarget = lockOnTarget.position - transform.position;
+            dirToTarget.y = 0f;
+            if (dirToTarget.sqrMagnitude > 0.0001f)
+                return dirToTarget.normalized;
+        }
+
+        // 2）否则，用鼠标指向的地面点
+        Camera cam = Camera.main;
+        if (cam != null)
+        {
+            Ray ray = cam.ScreenPointToRay(Input.mousePosition);
+            Plane groundPlane = new Plane(Vector3.up, transform.position);
+
+            if (groundPlane.Raycast(ray, out float enter))
+            {
+                Vector3 hitPoint = ray.GetPoint(enter);
+                Vector3 dir = hitPoint - transform.position;
+                dir.y = 0f;
+
+                if (dir.sqrMagnitude > 0.0001f)
+                    return dir.normalized;
+            }
+        }
+
+        // 3）再不行就用当前 forward
+        Vector3 forward = transform.forward;
+        forward.y = 0f;
+        if (forward.sqrMagnitude < 0.0001f)
+            forward = Vector3.forward;
+
+        return forward.normalized;
+    }
 }

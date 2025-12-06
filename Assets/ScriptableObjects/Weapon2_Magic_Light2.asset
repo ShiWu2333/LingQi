@@ -1,0 +1,82 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 23b7e4405d614c4418e30b97f39c9b4b, type: 3}
+  m_Name: Weapon2_Magic_Light2
+  m_EditorClassIdentifier: 
+  attackId: Weapon2_Magic_Light2
+  hitboxShape: 0
+  hitboxLocalOffset: {x: 0, y: 0, z: 0}
+  hitboxRadius: 0
+  hitboxBoxHalfExtents: {x: 0.5, y: 0.5, z: 1}
+  hitboxCapsuleRadius: 0.7
+  hitboxCapsuleHeight: 2
+  hitboxCapsuleDirection: {x: 0, y: 0, z: 1}
+  startup: 0.15
+  active: 0.25
+  recovery: 0.25
+  hitStartTime: 0.2
+  hitEndTime: 0
+  staminaCost: 10
+  manaCost: 10
+  damage: 10
+  moveMultiplierStartup: 0.5
+  moveMultiplierActive: 0.5
+  moveMultiplierRecovery: 0.5
+  stepForward: 0
+  stepDistance: 1
+  stepDuration: 0.1
+  cancelableAfter: 0.4
+  poiseDamage: 5
+  impact: 0
+  comboGroupId: SampleMagic_L
+  comboStepIndex: 1
+  nextCombo: {fileID: 11400000, guid: 7534e7d43702fa24c862043c840a9b55, type: 2}
+  comboInputOpenTime: 0.4
+  comboInputCloseTime: 0.65
+  animationClip: {fileID: 0}
+  animatorStateName: 
+  swordMotion:
+    startAngle: 0
+    endAngle: 0
+    radius: 0
+    idleAngle: 0
+    idleRadius: 0
+    anticipationOffset: 0
+    overshootOffset: 0
+    startPitch: 0
+    endPitch: 0
+    idlePitch: 0
+    anticipationPitchOffset: 0
+    overshootPitchOffset: 0
+    startRoll: 0
+    endRoll: 0
+    idleRoll: 0
+    anticipationRollOffset: 0
+    overshootRollOffset: 0
+  slashVFXPrefab: {fileID: 0}
+  splashVFXPrefab: {fileID: 0}
+  hitVFXPrefab: {fileID: 1035977224672214417, guid: 057aa477789506a44bd206e9c5acad19, type: 3}
+  slashLocalOffset: {x: 0, y: 0, z: 0}
+  slashLocalEulerOffset: {x: 0, y: 0, z: 0}
+  slashScale: 1
+  vfxBaseDuration: 1
+  vfxLifetime: 0.5
+  isProjectileAttack: 1
+  projectilePrefab: {fileID: 6022870408668927435, guid: 1e89d8e7fb2fbd741a990864de6c32ea, type: 3}
+  projectileSpawnOffset: {x: 0, y: 1.5, z: 0}
+  projectileSpeed: 16
+  projectileLifeTime: 3
+  projectileCount: 3
+  projectileInterval: 0.12
+  projectileHoming: 0
+  projectileHomingTurnSpeedDeg: 360
+  projectileHomingHeightOffset: 0.8

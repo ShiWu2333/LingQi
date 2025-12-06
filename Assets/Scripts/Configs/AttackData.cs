@@ -159,6 +159,39 @@ public class AttackData : ScriptableObject
 
     [Tooltip("希望这一招的 slash 在多少秒内播完（Active 匹配用）")]
     public float vfxLifetime = 0.5f;
+
+    // ================== Projectile（远程攻击支持） ==================
+    [Header("Projectile Attack (Optional)")]
+    public bool isProjectileAttack = false;
+
+    [Tooltip("发射物 prefab（必须包含 Projectile 组件）")]
+    public GameObject projectilePrefab;
+
+    [Tooltip("发射点相对玩家坐标偏移（若未提供 SpawnPoint）")]
+    public Vector3 projectileSpawnOffset = new Vector3(0, 1.0f, 0.6f);
+
+    [Tooltip("发射速度（m/s）")]
+    public float projectileSpeed = 16f;
+
+    [Tooltip("投射物最大生存时间")]
+    public float projectileLifeTime = 3f;
+
+    [Tooltip("发射数量（轻击 = 1，重击 = 3）")]
+    public int projectileCount = 1;
+
+    [Tooltip("多发之间的间隔（重击三连发）")]
+    public float projectileInterval = 0.12f;
+
+    [Header("Projectile Homing (Optional)")]
+    [Tooltip("是否对锁定目标进行软追踪")]
+    public bool projectileHoming = false;
+
+    [Tooltip("追踪转向速度（度/秒），例如 360 = 1 秒最多转 360 度")]
+    public float projectileHomingTurnSpeedDeg = 360f;
+
+    [Tooltip("瞄准目标时的高度偏移，比如瞄准敌人胸口而不是脚")]
+    public float projectileHomingHeightOffset = 0.8f;
+
 }
 
 public enum SwordMotionType
