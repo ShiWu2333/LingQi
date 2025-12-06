@@ -13,18 +13,18 @@ MonoBehaviour:
   m_Name: Weapon3_DashAttack
   m_EditorClassIdentifier: 
   attackId: DashAttack_1
-  hitboxShape: 1
-  hitboxLocalOffset: {x: 0, y: 1.34, z: 1.66}
-  hitboxRadius: 1
+  hitboxShape: 0
+  hitboxLocalOffset: {x: 0, y: 1.34, z: 0}
+  hitboxRadius: 4.14
   hitboxBoxHalfExtents: {x: 0.5, y: 1.43, z: 1.34}
   hitboxCapsuleRadius: 0.7
   hitboxCapsuleHeight: 2
   hitboxCapsuleDirection: {x: 0, y: 0, z: 1}
-  startup: 0.2
-  active: 0.1
-  recovery: 0.25
-  hitStartTime: 0.25
-  hitEndTime: 0.3
+  startup: 0.3
+  active: 0.2
+  recovery: 0.8
+  hitStartTime: 0.45
+  hitEndTime: 0.5
   staminaCost: 8
   manaCost: 0
   damage: 30
@@ -62,11 +62,21 @@ MonoBehaviour:
     idleRoll: 0
     anticipationRollOffset: -20
     overshootRollOffset: 20
-  slashVFXPrefab: {fileID: 26357312617216343, guid: 43a6fff530ea41e47b72e332549cc9d2, type: 3}
-  splashVFXPrefab: {fileID: 3528051367564371829, guid: dca59b7a4630b9f40b5264cd8458014a, type: 3}
-  hitVFXPrefab: {fileID: 833273125943498317, guid: 9eaf97f03c39c9743a286e2ac3725124, type: 3}
+  slashVFXPrefab: {fileID: 6389406066330802589, guid: 5ef8d476ac4025a4e85cc5e7c5004889, type: 3}
+  splashVFXPrefab: {fileID: 1713045243172065375, guid: f791790f35137b946b82347edb9264f2, type: 3}
+  hitVFXPrefab: {fileID: 1035977224672214417, guid: 057aa477789506a44bd206e9c5acad19, type: 3}
   slashLocalOffset: {x: 0, y: 0, z: 0}
-  slashLocalEulerOffset: {x: -30, y: -90, z: 180}
-  slashScale: 1
+  slashLocalEulerOffset: {x: 180, y: 180, z: 0}
+  slashScale: 0.65
   vfxBaseDuration: 1
-  vfxLifetime: 0.5
+  vfxLifetime: 0.75
+  isProjectileAttack: 0
+  projectilePrefab: {fileID: 0}
+  projectileSpawnOffset: {x: 0, y: 1, z: 0.6}
+  projectileSpeed: 16
+  projectileLifeTime: 3
+  projectileCount: 1
+  projectileInterval: 0.12
+  projectileHoming: 0
+  projectileHomingTurnSpeedDeg: 360
+  projectileHomingHeightOffset: 0.8

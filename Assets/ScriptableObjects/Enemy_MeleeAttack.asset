@@ -20,7 +20,7 @@ MonoBehaviour:
   hitboxCapsuleRadius: 0.7
   hitboxCapsuleHeight: 2
   hitboxCapsuleDirection: {x: 0, y: 0, z: 1}
-  startup: 0.6
+  startup: 0.5
   active: 0.12
   recovery: 0.3
   hitStartTime: 0.7
@@ -70,3 +70,13 @@ MonoBehaviour:
   slashScale: 1
   vfxBaseDuration: 1
   vfxLifetime: 0.5
+  isProjectileAttack: 0
+  projectilePrefab: {fileID: 0}
+  projectileSpawnOffset: {x: 0, y: 1, z: 0.6}
+  projectileSpeed: 16
+  projectileLifeTime: 3
+  projectileCount: 1
+  projectileInterval: 0.12
+  projectileHoming: 0
+  projectileHomingTurnSpeedDeg: 360
+  projectileHomingHeightOffset: 0.8

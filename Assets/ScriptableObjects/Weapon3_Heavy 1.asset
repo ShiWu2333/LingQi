@@ -13,28 +13,28 @@ MonoBehaviour:
   m_Name: Weapon3_Heavy 1
   m_EditorClassIdentifier: 
   attackId: Weapon3_Heavy 1
-  hitboxShape: 2
-  hitboxLocalOffset: {x: 0, y: 1, z: 2.87}
+  hitboxShape: 0
+  hitboxLocalOffset: {x: 0, y: 1, z: 0}
   hitboxRadius: 3.81
   hitboxBoxHalfExtents: {x: 0.5, y: 0.5, z: 1}
   hitboxCapsuleRadius: 2.35
   hitboxCapsuleHeight: 4.64
   hitboxCapsuleDirection: {x: 1, y: 0, z: 0}
-  startup: 0.55
-  active: 0.15
-  recovery: 0.55
-  hitStartTime: 0.6
-  hitEndTime: 0.65
-  staminaCost: 18
+  startup: 0.9
+  active: 0.3
+  recovery: 0.9
+  hitStartTime: 0.95
+  hitEndTime: 1.3
+  staminaCost: 30
   manaCost: 10
-  damage: 20
-  moveMultiplierStartup: 0
-  moveMultiplierActive: 0
-  moveMultiplierRecovery: 0
-  stepForward: 1
+  damage: 50
+  moveMultiplierStartup: 0.3
+  moveMultiplierActive: 0.1
+  moveMultiplierRecovery: 0.1
+  stepForward: 0
   stepDistance: 0.5
   stepDuration: 0.12
-  cancelableAfter: 0.1
+  cancelableAfter: 1.35
   poiseDamage: 20
   impact: 0
   comboGroupId: 
@@ -62,14 +62,14 @@ MonoBehaviour:
     idleRoll: 0
     anticipationRollOffset: 0
     overshootRollOffset: 0
-  slashVFXPrefab: {fileID: 8587560481101609250, guid: 2204f06b178af014986bf95a7bda8e6e, type: 3}
-  splashVFXPrefab: {fileID: 4580678310858329431, guid: 617d250a42c20444c9a4c95b32c2f807, type: 3}
-  hitVFXPrefab: {fileID: 833273125943498317, guid: 9eaf97f03c39c9743a286e2ac3725124, type: 3}
+  slashVFXPrefab: {fileID: 6389406066330802589, guid: 5ef8d476ac4025a4e85cc5e7c5004889, type: 3}
+  splashVFXPrefab: {fileID: 8948849605109033063, guid: 4aae8a9d47e086541a4b0ad91885dfd5, type: 3}
+  hitVFXPrefab: {fileID: 1035977224672214417, guid: 057aa477789506a44bd206e9c5acad19, type: 3}
   slashLocalOffset: {x: 0, y: 0, z: 0}
-  slashLocalEulerOffset: {x: -180, y: -10, z: -180}
-  slashScale: 3
+  slashLocalEulerOffset: {x: -90, y: 0, z: 180}
+  slashScale: 0.75
   vfxBaseDuration: 1
-  vfxLifetime: 0.65
+  vfxLifetime: 1
   isProjectileAttack: 0
   projectilePrefab: {fileID: 0}
   projectileSpawnOffset: {x: 0, y: 1, z: 0.6}

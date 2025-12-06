@@ -25,12 +25,12 @@ MonoBehaviour:
   recovery: 0.7
   hitStartTime: 0.6
   hitEndTime: 0.65
-  staminaCost: 8
+  staminaCost: 20
   manaCost: 0
   damage: 30
-  moveMultiplierStartup: 0
-  moveMultiplierActive: 0
-  moveMultiplierRecovery: 0
+  moveMultiplierStartup: 0.2
+  moveMultiplierActive: 0.1
+  moveMultiplierRecovery: 0.1
   stepForward: 0
   stepDistance: 0.5
   stepDuration: 0.1
