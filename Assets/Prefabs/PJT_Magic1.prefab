@@ -205,9 +205,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1496bc2f20458374d80cce47ca1a5cc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  scatterOnSpawn: 1
-  scatterAngleDeg: 15
-  homingDelay: 0.2
+  initialSpreadAngleDeg: 30
 --- !u!54 &7825463869142051606
 Rigidbody:
   m_ObjectHideFlags: 0

@@ -1,24 +1,20 @@
-using System.Collections;
+ï»¿using System.Collections;
 using UnityEngine;
 
 [DisallowMultipleComponent]
 public class CharHitRecoil : MonoBehaviour
 {
-    [Header("Recoil Angles (Degrees)")]
-    [Tooltip("ÕıÃæ±»´òÊ±£¬ÉíÌåÏòºóÑöµÄ×î´ó½Ç¶È")]
-    public float maxBackwardAngle = 30f;
+    [Header("Target (å¯é€‰)")]
+    [Tooltip("çœŸæ­£åšæŠ–åŠ¨çš„æ¨¡å‹èŠ‚ç‚¹ï¼Œç•™ç©ºå°±ç”¨å½“å‰ transformã€‚æ¨èæŒ‚åœ¨æ¨¡å‹å­ç‰©ä½“ä¸Šã€‚")]
+    [SerializeField] private Transform modelRoot;
 
-    [Tooltip("²àÃæ±»´òÊ±£¬ÉíÌåÏòÒ»²àÅ¤µÄ×î´ó½Ç¶È")]
+    [Header("Recoil Angles (Degrees)")]
+    public float maxBackwardAngle = 30f;
     public float maxSideAngle = 30f;
 
     [Header("Timings")]
-    [Tooltip("´ÓÕı³£×ËÊÆ¹ı¶Éµ½ÊÜ»÷×ËÊÆµÄÊ±¼ä")]
     public float recoilInDuration = 0.08f;
-
-    [Tooltip("´ÓÊÜ»÷×ËÊÆ»Ö¸´µ½Õı³£×ËÊÆµÄÊ±¼ä")]
     public float recoilOutDuration = 0.12f;
-
-    [Tooltip("ÊÇ·ñ°´ ImpactGrade Ëõ·ÅÇ¿¶È")]
     public bool scaleByImpact = true;
 
     private Quaternion _baseLocalRot;
@@ -26,13 +22,17 @@ public class CharHitRecoil : MonoBehaviour
 
     private void Awake()
     {
-        _baseLocalRot = transform.localRotation;
+        if (modelRoot == null)
+            modelRoot = transform; // æ¨èï¼šç›´æ¥æŠŠè¿™ä¸ªç»„ä»¶æŒ‚åœ¨æ¨¡å‹èŠ‚ç‚¹ä¸Š
+
+        _baseLocalRot = modelRoot.localRotation;
     }
 
     public void PlayRecoil(Vector3 hitPoint, ImpactGrade impact)
     {
         if (!isActiveAndEnabled) return;
         if (!gameObject.activeInHierarchy) return;
+        if (modelRoot == null) return;
 
         float strength = 1f;
         if (scaleByImpact)
@@ -46,6 +46,9 @@ public class CharHitRecoil : MonoBehaviour
             }
         }
 
+        // â­ æ¯æ¬¡å—å‡»æ—¶ï¼Œä»¥å½“å‰ localRotation ä½œä¸ºåŸºå‡†
+        _baseLocalRot = modelRoot.localRotation;
+
         if (_routine != null)
             StopCoroutine(_routine);
 
@@ -54,55 +57,57 @@ public class CharHitRecoil : MonoBehaviour
 
     private IEnumerator RecoilRoutine(Vector3 hitPoint, float strength)
     {
-        // ÃüÖĞµã×ªµ½½ÇÉ«±¾µØ¿Õ¼ä
-        Vector3 localHit = transform.InverseTransformPoint(hitPoint);
-        localHit.y = 0f;
+        // å‘½ä¸­æ–¹å‘ï¼ˆä»¥æ¨¡å‹ä½ç½®ä¸ºå‚è€ƒï¼‰
+        Vector3 toHit = modelRoot.position - hitPoint;
+        toHit.y = 0f;
 
-        if (localHit.sqrMagnitude < 0.0001f)
-            localHit = Vector3.forward;      // ¼«¶ËÇé¿ö¶µµ×£ºµ±³ÉÕıÃæ
+        if (toHit.sqrMagnitude < 0.0001f)
+            toHit = -modelRoot.forward; // å½“æˆæ­£é¢è¢«æ‰“
 
-        // localHit.z > 0 ËµÃ÷ÃüÖĞµãÔÚ½ÇÉ«Ç°·½ ¡ú ÏòºóÑö
-        // localHit.z < 0 ÃüÖĞµãÔÚ½ÇÉ«±³ºó ¡ú ÏòÇ°ÇãÒ»µã
-        float backSign = (localHit.z >= 0f) ? 1f : -1f;
+        toHit.Normalize();
 
-        // localHit.x > 0 ÃüÖĞµãÔÚ½ÇÉ«ÓÒ²à£» < 0 ÔÚ×ó²à
-        // ÎÒÃÇÏ£Íû¡°±»´òµÄÄÇÒ»²àÌ§ÆğÀ´¡¢ÉíÌåÍù¶Ô²àµ¹Ò»µã¡±
-        float sideSign = Mathf.Sign(localHit.x);
+        // å‰åï¼šå‘½ä¸­ç‚¹åœ¨å‰é¢ â†’ å‘åä»°
+        float frontBack = Vector3.Dot(toHit, modelRoot.forward); // >0ï¼šå‰æ–¹
+
+        float backSign = (frontBack >= 0f) ? 1f : -1f;
+        float backAngle = maxBackwardAngle * strength * backSign;
+
+        // å·¦å³ï¼šå‘½ä¸­ç‚¹åœ¨å³ä¾§ â†’ å‘å·¦å€’ä¸€ç‚¹ï¼ˆåæ–¹å‘ï¼‰
+        float side = Vector3.Dot(toHit, modelRoot.right); // >0ï¼šå³ä¾§
+
+        float sideSign = Mathf.Sign(side);
         if (Mathf.Abs(sideSign) < 0.0001f)
             sideSign = 0f;
 
-        float backAngle = maxBackwardAngle * strength * backSign;
-        // ÕâÀïÈ¡¸ººÅ£ºÓÒ²à±»´ò ¡ú Ïò×óµ¹£¬×ó²à±»´ò ¡ú ÏòÓÒµ¹
         float sideAngle = -maxSideAngle * strength * sideSign;
 
-        Quaternion targetRot =
-            Quaternion.Euler(backAngle, 0f, sideAngle) * _baseLocalRot;
+        Quaternion targetRot = Quaternion.Euler(backAngle, 0f, sideAngle) * _baseLocalRot;
 
-        // ½øÈëÊÜ»÷×ËÊÆ
+        // è¿›å…¥å—å‡»å§¿åŠ¿
         float t = 0f;
         while (t < recoilInDuration)
         {
             float n = recoilInDuration > 0f ? t / recoilInDuration : 1f;
             n = 1f - (1f - n) * (1f - n); // EaseOut
-            transform.localRotation = Quaternion.Slerp(_baseLocalRot, targetRot, n);
+            modelRoot.localRotation = Quaternion.Slerp(_baseLocalRot, targetRot, n);
             t += Time.deltaTime;
             yield return null;
         }
 
-        transform.localRotation = targetRot;
+        modelRoot.localRotation = targetRot;
 
-        // »Øµ½Õ¾Á¢
+        // å›åˆ°ç«™ç«‹
         t = 0f;
         while (t < recoilOutDuration)
         {
             float n = recoilOutDuration > 0f ? t / recoilOutDuration : 1f;
             n = n * n; // EaseIn
-            transform.localRotation = Quaternion.Slerp(targetRot, _baseLocalRot, n);
+            modelRoot.localRotation = Quaternion.Slerp(targetRot, _baseLocalRot, n);
             t += Time.deltaTime;
             yield return null;
         }
 
-        transform.localRotation = _baseLocalRot;
+        modelRoot.localRotation = _baseLocalRot;
         _routine = null;
     }
 }

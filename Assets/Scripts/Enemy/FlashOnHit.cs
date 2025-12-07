@@ -38,7 +38,7 @@ public class FlashOnHit : MonoBehaviour
         }
 
         renderers = list.ToArray();
-        originalColors = colors.ToArray();
+        originalColors = colors.ToArray(); 
     }
 
     /// <summary>

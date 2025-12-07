@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using TMPro;
 
 public class DebugOverlay : MonoBehaviour
@@ -9,18 +9,18 @@ public class DebugOverlay : MonoBehaviour
 
     private void Awake()
     {
-        // ×Ô¶¯²éÕÒ PlayerResources
+        // è‡ªåŠ¨æŸ¥æ‰¾ PlayerResources
         resources = FindAnyObjectByType<PlayerResources>();
         if (resources == null)
             Debug.LogError("DebugOverlay: No PlayerResources found in scene.");
 
-        // ÕÒ Text £¨±¾ÎïÌåÉÏµÄ£©
+        // æ‰¾ UI æ–‡æœ¬
         text = GetComponentInChildren<TextMeshProUGUI>();
         if (text == null)
             Debug.LogError("DebugOverlay: No TextMeshProUGUI in children.");
 
-        // ÕÒ¸ÕÌå£¨Íæ¼Ò£©
-        var player = FindAnyObjectByType<PlayerResources>();
+        // æ‰¾ç©å®¶ Rigidbodyï¼ˆæœ‰äº›é¡¹ç›®ç©å®¶æ²¡æœ‰ Rigidbodyï¼Œè¿™é‡Œå®¹é”™ï¼‰
+        var player = resources != null ? resources.gameObject : null;
         if (player != null)
             playerRb = player.GetComponent<Rigidbody>();
     }
@@ -35,6 +35,9 @@ public class DebugOverlay : MonoBehaviour
         s += $"HP: {resources.CurrentHP:0}/{resources.MaxHP}\n";
         s += $"ST: {resources.CurrentStamina:0}/{resources.MaxStamina}\n";
         s += $"MP: {resources.CurrentMana:0}/{resources.MaxMana}\n";
+        s += $"SPIRIT: {resources.CurrentSpirit}\n";  // â­ æ–°å¢çµåŠ›
+        s += $"PAtk: {resources.PhysicalBonus * 100f:0.#}%\n";
+        s += $"MAtk: {resources.MagicBonus * 100f:0.#}%\n";
 
         if (playerRb != null)
             s += $"\nVelocity: {playerRb.velocity.magnitude:0.00}";

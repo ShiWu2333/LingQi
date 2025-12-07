@@ -10,38 +10,40 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 23b7e4405d614c4418e30b97f39c9b4b, type: 3}
-  m_Name: Weapon3_Light1
+  m_Name: Weapon1_Light 1
   m_EditorClassIdentifier: 
-  attackId: Weapon3_Light1
+  attackId: light_1
   hitboxShape: 2
-  hitboxLocalOffset: {x: 0, y: 1, z: 2.2}
+  hitboxLocalOffset: {x: 0, y: 1, z: 1.3}
   hitboxRadius: 1
   hitboxBoxHalfExtents: {x: 0.5, y: 0.5, z: 1}
-  hitboxCapsuleRadius: 2.09
-  hitboxCapsuleHeight: 2.93
+  hitboxCapsuleRadius: 1.5
+  hitboxCapsuleHeight: 2.3
   hitboxCapsuleDirection: {x: 1, y: 0, z: 0}
-  startup: 0.5
-  active: 0.15
-  recovery: 0.7
-  hitStartTime: 0.6
-  hitEndTime: 0.65
-  staminaCost: 20
+  startup: 0.2
+  active: 0.1
+  recovery: 0.3
+  hitStartTime: 0.25
+  hitEndTime: 0.3
+  staminaCost: 15
   manaCost: 0
-  damage: 30
-  moveMultiplierStartup: 0.2
-  moveMultiplierActive: 0.1
-  moveMultiplierRecovery: 0.1
+  damage: 10
+  physicalCoef: 1
+  magicCoef: 0
+  moveMultiplierStartup: 0.5
+  moveMultiplierActive: 0.3
+  moveMultiplierRecovery: 0.3
   stepForward: 0
   stepDistance: 0.5
   stepDuration: 0.1
-  cancelableAfter: 9.95
-  poiseDamage: 15
-  impact: 0
-  comboGroupId: GreatSword_L
+  cancelableAfter: 0.1
+  poiseDamage: 5
+  impact: 1
+  comboGroupId: ShortSword_L
   comboStepIndex: 0
-  nextCombo: {fileID: 11400000, guid: a3475dee5def7f24393eb8e7672692c9, type: 2}
-  comboInputOpenTime: 0.8
-  comboInputCloseTime: 1.35
+  nextCombo: {fileID: 11400000, guid: eb8b0ee7400cc174d89f89eece8431fc, type: 2}
+  comboInputOpenTime: 0.3
+  comboInputCloseTime: 0.65
   animationClip: {fileID: 7400000, guid: 7955a24b57357004ca47200c7aaeb73d, type: 2}
   animatorStateName: LightAttack
   swordMotion:
@@ -67,7 +69,7 @@ MonoBehaviour:
   hitVFXPrefab: {fileID: 833273125943498317, guid: 9eaf97f03c39c9743a286e2ac3725124, type: 3}
   slashLocalOffset: {x: 0, y: 0, z: 0}
   slashLocalEulerOffset: {x: 90, y: -180, z: 0}
-  slashScale: 0.75
+  slashScale: 0.45
   vfxBaseDuration: 1
   vfxLifetime: 0.35
   isProjectileAttack: 0

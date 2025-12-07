@@ -62,6 +62,12 @@ public class AttackData : ScriptableObject
     [Tooltip("这一击的基础伤害（后续会叠加玩家攻力、敌人防御等）")]
     public float damage = 10f;
 
+    [Tooltip("物理伤害系数（1 = 100% 参与玩家物攻加成）")]
+    public float physicalCoef = 1f;
+
+    [Tooltip("法术伤害系数（1 = 100% 参与玩家法攻加成）")]
+    public float magicCoef = 0f;
+
     // ================== 移动相关 ==================
 
     [Header("Movement Multipliers")]

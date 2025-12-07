@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 23b7e4405d614c4418e30b97f39c9b4b, type: 3}
-  m_Name: Weapon2_Magic_Light1
+  m_Name: Weapon2_Magic_Heavy2
   m_EditorClassIdentifier: 
-  attackId: Weapon2_Magic_Light1
+  attackId: Weapon2_Magic_Heavy2
   hitboxShape: 0
   hitboxLocalOffset: {x: 0, y: 0, z: 0}
   hitboxRadius: 0
@@ -20,28 +20,30 @@ MonoBehaviour:
   hitboxCapsuleRadius: 0.7
   hitboxCapsuleHeight: 2
   hitboxCapsuleDirection: {x: 0, y: 0, z: 1}
-  startup: 0.15
-  active: 0.25
+  startup: 0.3
+  active: 0.5
   recovery: 0.25
   hitStartTime: 0.2
   hitEndTime: 0
   staminaCost: 10
-  manaCost: 10
+  manaCost: 25
   damage: 10
-  moveMultiplierStartup: 0.5
+  physicalCoef: 0
+  magicCoef: 1
+  moveMultiplierStartup: 0.75
   moveMultiplierActive: 0.5
-  moveMultiplierRecovery: 0.5
+  moveMultiplierRecovery: 1
   stepForward: 0
   stepDistance: 1
   stepDuration: 0.1
-  cancelableAfter: 0.4
+  cancelableAfter: 0.18
   poiseDamage: 5
   impact: 0
-  comboGroupId: SampleMagic_L
+  comboGroupId: 
   comboStepIndex: 0
-  nextCombo: {fileID: 11400000, guid: 9bcfd3719b90ec145baa0e8ae7191ad8, type: 2}
-  comboInputOpenTime: 0.4
-  comboInputCloseTime: 0.65
+  nextCombo: {fileID: 0}
+  comboInputOpenTime: 1.05
+  comboInputCloseTime: 0
   animationClip: {fileID: 0}
   animatorStateName: 
   swordMotion:
@@ -73,10 +75,10 @@ MonoBehaviour:
   isProjectileAttack: 1
   projectilePrefab: {fileID: 6022870408668927435, guid: 1e89d8e7fb2fbd741a990864de6c32ea, type: 3}
   projectileSpawnOffset: {x: 0, y: 1.5, z: 0}
-  projectileSpeed: 16
-  projectileLifeTime: 3
-  projectileCount: 1
+  projectileSpeed: 12
+  projectileLifeTime: 2
+  projectileCount: 3
   projectileInterval: 0.12
-  projectileHoming: 0
-  projectileHomingTurnSpeedDeg: 360
+  projectileHoming: 1
+  projectileHomingTurnSpeedDeg: 60
   projectileHomingHeightOffset: 0.8

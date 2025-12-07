@@ -7,6 +7,13 @@ public class PlayerCombatController : MonoBehaviour, IAttackSource
     [Header("Config")]
     [SerializeField] private WeaponConfig weaponConfig;
 
+    [Header("Weapon Presets (prototype)")]
+    [SerializeField] private WeaponConfig weaponSlot1;    // 按 1 切换
+    [SerializeField] private WeaponConfig weaponSlot2;    // 按 2 切换
+    [SerializeField] private WeaponConfig weaponSlot3;    // 按 3 切换
+
+    [SerializeField] private int currentWeaponIndex = 0;  // 0/1/2 对应上面三个
+
     [Header("VFX (Test)")]
     [SerializeField] private Transform slashSocket;
 
@@ -68,6 +75,13 @@ public class PlayerCombatController : MonoBehaviour, IAttackSource
         movement = GetComponent<PlayerMovement>();
         dodge = GetComponent<PlayerDodgeController>();
         controller = GetComponent<CharacterController>();
+
+        if (weaponSlot1 != null)
+        {
+            weaponConfig = weaponSlot1;
+            currentWeaponIndex = 0;
+        }
+
     }
 
     private void Update()
@@ -75,10 +89,34 @@ public class PlayerCombatController : MonoBehaviour, IAttackSource
         if (resources != null && resources.IsDead)
             return;
 
+        HandleWeaponSwitchInput();      // << 新增
+
         TryConsumeQueuedDashAttack();
         HandleAttackInput();
         TickAttackState(Time.deltaTime);
     }
+
+    public float GetFinalDamage(AttackData attack)
+    {
+        if (attack == null)
+            return 0f;
+
+        float baseDamage = attack.damage;
+        if (resources == null)
+            return baseDamage;
+
+        float pBonus = resources.PhysicalBonus; // 例如 0.15
+        float mBonus = resources.MagicBonus;    // 例如 0.20
+
+        float physCoef = attack.physicalCoef;
+        float magicCoef = attack.magicCoef;
+
+        float mul = 1f + pBonus * physCoef + mBonus * magicCoef;
+        if (mul < 0f) mul = 0f;
+
+        return baseDamage * mul;
+    }
+
 
     // =========================================================
     // INPUT
@@ -128,6 +166,43 @@ public class PlayerCombatController : MonoBehaviour, IAttackSource
             }
         }
     }
+    // =========================================================
+    //  Weapon Switching (prototype: 1/2/3)
+    // =========================================================
+
+    private void HandleWeaponSwitchInput()
+    {
+        // 只在 Idle 状态允许切换，避免半路换武器把当前 AttackData 搞乱
+        if (currentState != AttackState.Idle)
+            return;
+
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            SwitchWeapon(weaponSlot1, 0);
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            SwitchWeapon(weaponSlot2, 1);
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha3))
+        {
+            SwitchWeapon(weaponSlot3, 2);
+        }
+    }
+
+    private void SwitchWeapon(WeaponConfig cfg, int index)
+    {
+        if (cfg == null)
+            return;
+        if (cfg == weaponConfig)
+            return; // 同一把，不必重复切
+
+        weaponConfig = cfg;
+        currentWeaponIndex = index;
+
+        // 如果之后要做 UI 显示当前武器，可以在这里触发事件：
+        // OnWeaponChanged?.Invoke(cfg);
+    }
 
 
     // =========================================================
@@ -144,6 +219,11 @@ public class PlayerCombatController : MonoBehaviour, IAttackSource
         if (!resources.TrySpendMana(attack.manaCost))
             return;
 
+        // ⭐ 关键：开启一招新攻击（无论首段还是连段），
+        // 先确保朝向是解锁的，这样这招的 Startup 可以重新调整方向
+        if (movement != null)
+            movement.UnlockFacing();
+
         currentAttack = attack;
         currentState = AttackState.Startup;
         stateTimer = 0f;
@@ -154,11 +234,12 @@ public class PlayerCombatController : MonoBehaviour, IAttackSource
 
         OnAttackStarted?.Invoke(attack);
 
-        // ===== Projectile 计时重置（从整个攻击起算，后面 Active 再单独计）=====
+        // Projectile 计时重置
         projectilesFired = 0;
         projectileElapsed = 0f;
         projectileNextFireTime = attack != null ? attack.hitStartTime : 0f;
     }
+
 
 
     // =========================================================
@@ -607,7 +688,8 @@ public class PlayerCombatController : MonoBehaviour, IAttackSource
             if (col.TryGetComponent(out EnemyResources enemyRes))
             {
                 Vector3 hitPoint = col.ClosestPoint(center);
-                enemyRes.TakeDamage(currentAttack.damage, hitPoint, currentAttack.impact);
+                float finalDamage = GetFinalDamage(currentAttack);
+                enemyRes.TakeDamage(finalDamage, hitPoint, currentAttack.impact);
 
                 // ⭐ 近战命中也用同一个 VFX 函数
                 PlayHitVfx(hitPoint, currentAttack);

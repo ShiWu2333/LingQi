@@ -28,6 +28,8 @@ MonoBehaviour:
   staminaCost: 10
   manaCost: 10
   damage: 10
+  physicalCoef: 1
+  magicCoef: 1
   moveMultiplierStartup: 0.5
   moveMultiplierActive: 0.5
   moveMultiplierRecovery: 0.5
@@ -73,10 +75,10 @@ MonoBehaviour:
   isProjectileAttack: 1
   projectilePrefab: {fileID: 6022870408668927435, guid: 1e89d8e7fb2fbd741a990864de6c32ea, type: 3}
   projectileSpawnOffset: {x: 0, y: 1.5, z: 0}
-  projectileSpeed: 16
-  projectileLifeTime: 3
+  projectileSpeed: 12
+  projectileLifeTime: 2
   projectileCount: 3
   projectileInterval: 0.12
-  projectileHoming: 0
-  projectileHomingTurnSpeedDeg: 360
+  projectileHoming: 1
+  projectileHomingTurnSpeedDeg: 60
   projectileHomingHeightOffset: 0.8

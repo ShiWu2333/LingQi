@@ -10,6 +10,10 @@ public class EnemyResources : MonoBehaviour
     [Header("Runtime (ReadOnly)")]
     [SerializeField] private float currentHP;
 
+    [Header("Reward")]
+    [Tooltip("击杀后给予玩家的灵力数量")]
+    [SerializeField] private int spiritReward = 1;
+
     public event Action<float, float> OnHPChanged;
     public event Action OnDeath;
     public event Action<float> OnDamaged;
@@ -18,9 +22,10 @@ public class EnemyResources : MonoBehaviour
     public float CurrentHP => currentHP;
     public float MaxHP => stats != null ? stats.maxHP : 0f;
 
-    public bool IsDead => _isDead;
     private bool _isDead;
     private FlashOnHit _flashOnHit;
+
+    public bool IsDead => _isDead;
 
     private void Awake()
     {
@@ -88,6 +93,22 @@ public class EnemyResources : MonoBehaviour
     {
         Debug.Log("[EnemyResources] Enemy died.", this);
         OnDeath?.Invoke();
+
+        // ========= 新增：击杀奖励灵力 =========
+        if (spiritReward > 0)
+        {
+            GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+            if (playerObj != null)
+            {
+                var playerRes = playerObj.GetComponent<PlayerResources>();
+                if (playerRes != null)
+                {
+                    playerRes.AddSpirit(spiritReward);
+                }
+            }
+        }
+        // =====================================
+
         gameObject.SetActive(false);
     }
 }

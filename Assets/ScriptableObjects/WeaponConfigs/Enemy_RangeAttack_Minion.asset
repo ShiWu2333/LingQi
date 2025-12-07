@@ -10,52 +10,54 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 23b7e4405d614c4418e30b97f39c9b4b, type: 3}
-  m_Name: Enemy_MeleeAttack
+  m_Name: Enemy_RangeAttack_Minion
   m_EditorClassIdentifier: 
-  attackId: enemy_slash_1
+  attackId: Weapon2_Magic_Light1
   hitboxShape: 0
-  hitboxLocalOffset: {x: 0, y: 0, z: 1}
-  hitboxRadius: 1
+  hitboxLocalOffset: {x: 0, y: 0, z: 0}
+  hitboxRadius: 0
   hitboxBoxHalfExtents: {x: 0.5, y: 0.5, z: 1}
   hitboxCapsuleRadius: 0.7
   hitboxCapsuleHeight: 2
   hitboxCapsuleDirection: {x: 0, y: 0, z: 1}
-  startup: 0.5
-  active: 0.12
-  recovery: 0.3
-  hitStartTime: 0.7
-  hitEndTime: 0.72
-  staminaCost: 0
-  manaCost: 0
-  damage: 1
-  moveMultiplierStartup: 0.4
-  moveMultiplierActive: 0.2
-  moveMultiplierRecovery: 0.7
+  startup: 0.15
+  active: 0.25
+  recovery: 0.25
+  hitStartTime: 0.2
+  hitEndTime: 0
+  staminaCost: 10
+  manaCost: 10
+  damage: 10
+  physicalCoef: 1
+  magicCoef: 1
+  moveMultiplierStartup: 0.5
+  moveMultiplierActive: 0.5
+  moveMultiplierRecovery: 0.5
   stepForward: 0
   stepDistance: 1
   stepDuration: 0.1
-  cancelableAfter: 0.1
-  poiseDamage: 0
+  cancelableAfter: 0.4
+  poiseDamage: 5
   impact: 0
-  comboGroupId: 
+  comboGroupId: SampleMagic_L
   comboStepIndex: 0
-  nextCombo: {fileID: 0}
-  comboInputOpenTime: 0
-  comboInputCloseTime: 0
-  animationClip: {fileID: 7400000, guid: d20a6692c13800d479789fab66ad54db, type: 2}
-  animatorStateName: EnemyAttack
+  nextCombo: {fileID: 11400000, guid: 9bcfd3719b90ec145baa0e8ae7191ad8, type: 2}
+  comboInputOpenTime: 0.4
+  comboInputCloseTime: 0.65
+  animationClip: {fileID: 0}
+  animatorStateName: 
   swordMotion:
     startAngle: 0
     endAngle: 0
-    radius: 1
+    radius: 0
     idleAngle: 0
-    idleRadius: 1
+    idleRadius: 0
     anticipationOffset: 0
     overshootOffset: 0
     startPitch: 0
-    endPitch: 90
+    endPitch: 0
     idlePitch: 0
-    anticipationPitchOffset: -30
+    anticipationPitchOffset: 0
     overshootPitchOffset: 0
     startRoll: 0
     endRoll: 0
@@ -64,19 +66,19 @@ MonoBehaviour:
     overshootRollOffset: 0
   slashVFXPrefab: {fileID: 0}
   splashVFXPrefab: {fileID: 0}
-  hitVFXPrefab: {fileID: 0}
+  hitVFXPrefab: {fileID: 1035977224672214417, guid: 057aa477789506a44bd206e9c5acad19, type: 3}
   slashLocalOffset: {x: 0, y: 0, z: 0}
   slashLocalEulerOffset: {x: 0, y: 0, z: 0}
   slashScale: 1
   vfxBaseDuration: 1
   vfxLifetime: 0.5
-  isProjectileAttack: 0
-  projectilePrefab: {fileID: 0}
-  projectileSpawnOffset: {x: 0, y: 1, z: 0.6}
-  projectileSpeed: 16
-  projectileLifeTime: 3
+  isProjectileAttack: 1
+  projectilePrefab: {fileID: 6022870408668927435, guid: 1e89d8e7fb2fbd741a990864de6c32ea, type: 3}
+  projectileSpawnOffset: {x: 0, y: 1.5, z: 0}
+  projectileSpeed: 12
+  projectileLifeTime: 2
   projectileCount: 1
   projectileInterval: 0.12
-  projectileHoming: 0
-  projectileHomingTurnSpeedDeg: 360
+  projectileHoming: 1
+  projectileHomingTurnSpeedDeg: 60
   projectileHomingHeightOffset: 0.8

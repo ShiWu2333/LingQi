@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 59011b770d7c4e74180846bcecf0571d, type: 3}
   m_Name: PlayerStats_Default
   m_EditorClassIdentifier: 
-  maxHP: 200
+  maxHP: 80
   moveSpeed: 5
-  maxStamina: 200
-  staminaRegenPerSecond: 30
-  staminaRegenDelayAfterUse: 0.4
+  maxStamina: 100
+  staminaRegenPerSecond: 50
+  staminaRegenDelayAfterUse: 1
   maxMana: 200
   manaRegenPerSecond: 50
   maxPoise: 100

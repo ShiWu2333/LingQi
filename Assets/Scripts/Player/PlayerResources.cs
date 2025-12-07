@@ -12,6 +12,61 @@ public class PlayerResources : MonoBehaviour
     [SerializeField] private float currentStamina;
     [SerializeField] private float currentMana;
 
+    [Header("Spirit / 灵力")]
+    [SerializeField] private int currentSpirit = 0;   // Inspector 里只读查看就行
+
+    // ================== Level Up：属性等级 & 加成 ==================
+
+    [Header("Level Up - Runtime Levels")]
+    [SerializeField] private int hpLevel;
+    [SerializeField] private int staminaLevel;
+    [SerializeField] private int manaLevel;
+    [SerializeField] private int physicalAtkLevel;
+    [SerializeField] private int magicAtkLevel;
+
+    // 加成值（运行时）
+    [SerializeField] private float bonusMaxHP;
+    [SerializeField] private float bonusMaxStamina;
+    [SerializeField] private float bonusMaxMana;
+    [SerializeField] private float physicalBonus; // 0.15 = +15%
+    [SerializeField] private float magicBonus;    // 0.20 = +20%
+
+    public int HPLevel => hpLevel;
+    public int StaminaLevel => staminaLevel;
+    public int ManaLevel => manaLevel;
+    public int PhysicalAtkLevel => physicalAtkLevel;
+    public int MagicAtkLevel => magicAtkLevel;
+
+    public float PhysicalBonus => physicalBonus;
+    public float MagicBonus => magicBonus;
+
+    // ================== Level Up - Config（Inspector 可调） ==================
+
+    [Header("Level Up - Cost Config")]
+    [SerializeField] private int hpBaseCost = 5;
+    [SerializeField] private int hpCostPerLevel = 5;
+
+    [SerializeField] private int staminaBaseCost = 4;
+    [SerializeField] private int staminaCostPerLevel = 4;
+
+    [SerializeField] private int manaBaseCost = 5;
+    [SerializeField] private int manaCostPerLevel = 5;
+
+    [SerializeField] private int physicalBaseCost = 6;
+    [SerializeField] private int physicalCostPerLevel = 3;
+
+    [SerializeField] private int magicBaseCost = 6;
+    [SerializeField] private int magicCostPerLevel = 3;
+
+    [Header("Level Up - Gain Config")]
+    [SerializeField] private float hpPerLevel = 10f;
+    [SerializeField] private float staminaPerLevel = 5f;
+    [SerializeField] private float manaPerLevel = 10f;
+    [SerializeField] private float physicalBonusPerLevel = 0.02f; // +2%
+    [SerializeField] private float magicBonusPerLevel = 0.02f;    // +2%
+
+    // ================== 内部状态 ==================
+
     private float staminaRegenDelayTimer;
     private PlayerDodgeController dodge;
     private FlashOnHit _flashOnHit;
@@ -22,16 +77,19 @@ public class PlayerResources : MonoBehaviour
     public event Action<float, float> OnManaChanged;
     public event Action<float> OnDamaged;  // 受到了多少伤害（最终生效伤害）
     public event Action OnDeath;
+    public event Action<int> OnSpiritChanged;
 
     public float CurrentHP => currentHP;
     public float CurrentStamina => currentStamina;
     public float CurrentMana => currentMana;
 
-    public float MaxHP => stats != null ? stats.maxHP : 0f;
-    public float MaxStamina => stats != null ? stats.maxStamina : 0f;
-    public float MaxMana => stats != null ? stats.maxMana : 0f;
+    // ⭐ Max 值要包含加点的 bonus
+    public float MaxHP => (stats != null ? stats.maxHP : 0f) + bonusMaxHP;
+    public float MaxStamina => (stats != null ? stats.maxStamina : 0f) + bonusMaxStamina;
+    public float MaxMana => (stats != null ? stats.maxMana : 0f) + bonusMaxMana;
 
     public bool IsDead => currentHP <= 0f;
+    public int CurrentSpirit => currentSpirit;
 
     private void Awake()
     {
@@ -40,8 +98,10 @@ public class PlayerResources : MonoBehaviour
             Debug.LogError("[PlayerResources] Stats config is not assigned!", this);
             return;
         }
+
         dodge = GetComponent<PlayerDodgeController>();
-        _flashOnHit = GetComponentInChildren<FlashOnHit>();   // 新增
+        _flashOnHit = GetComponentInChildren<FlashOnHit>();
+
         InitFromConfig();
     }
 
@@ -64,6 +124,12 @@ public class PlayerResources : MonoBehaviour
         currentMana = stats.maxMana;
         staminaRegenDelayTimer = 0f;
 
+        // 等级和加成默认从 0 开始（如果你希望可配置初始等级，可以在这里根据某个初始值重算 bonus）
+        hpLevel = staminaLevel = manaLevel = 0;
+        physicalAtkLevel = magicAtkLevel = 0;
+        bonusMaxHP = bonusMaxStamina = bonusMaxMana = 0f;
+        physicalBonus = magicBonus = 0f;
+
         RaiseAllChangedEvents();
     }
 
@@ -72,29 +138,23 @@ public class PlayerResources : MonoBehaviour
         OnHPChanged?.Invoke(currentHP, MaxHP);
         OnStaminaChanged?.Invoke(currentStamina, MaxStamina);
         OnManaChanged?.Invoke(currentMana, MaxMana);
+        OnSpiritChanged?.Invoke(currentSpirit);
     }
 
-    // HP 操作
+    // ================== HP 操作 ==================
+
     public void TakeDamage(float amount, Vector3 hitPoint, ImpactGrade impact)
     {
         if (IsDead || amount <= 0f) return;
 
         // 闪避 i-frame：不受伤
         if (dodge != null && dodge.IsInvincible)
-        {
-            // Debug.Log("[PlayerResources] Damage ignored due to i-frame.");
             return;
-        }
 
         currentHP -= amount;
 
-        // 🔴 新增：真正扣血才广播受伤事件
         OnDamaged?.Invoke(amount);
         PlayHitFeedback(hitPoint, amount, impact);
-        if (_flashOnHit != null && amount > 0f)
-        {
-            _flashOnHit.Trigger(hitPoint, impact);   // ✔ 触发受击后仰 & 闪光
-        }
 
         if (currentHP <= 0f)
         {
@@ -107,6 +167,7 @@ public class PlayerResources : MonoBehaviour
             OnHPChanged?.Invoke(currentHP, MaxHP);
         }
     }
+
     private void PlayHitFeedback(Vector3 worldPos, float amount, ImpactGrade impact)
     {
         Vector3 popupPos = worldPos + Vector3.up * 0.8f;
@@ -132,7 +193,8 @@ public class PlayerResources : MonoBehaviour
         // 复活逻辑之后再加
     }
 
-    // Stamina 操作
+    // ================== Stamina 操作 ==================
+
     public bool TrySpendStamina(float amount)
     {
         if (amount <= 0f) return true;
@@ -166,7 +228,8 @@ public class PlayerResources : MonoBehaviour
         OnStaminaChanged?.Invoke(currentStamina, MaxStamina);
     }
 
-    // Mana 操作
+    // ================== Mana 操作 ==================
+
     public bool TrySpendMana(float amount)
     {
         if (amount <= 0f) return true;
@@ -190,6 +253,94 @@ public class PlayerResources : MonoBehaviour
         if (currentMana > MaxMana) currentMana = MaxMana;
 
         OnManaChanged?.Invoke(currentMana, MaxMana);
+    }
+
+    // ================== 灵力对外接口 ==================
+
+    /// <summary>击杀敌人等获得灵力。</summary>
+    public void AddSpirit(int amount)
+    {
+        if (amount <= 0) return;
+
+        currentSpirit += amount;
+        OnSpiritChanged?.Invoke(currentSpirit);
+    }
+
+    /// <summary>消耗灵力（用于加点）。成功返回 true，失败 false。</summary>
+    public bool TrySpendSpirit(int amount)
+    {
+        if (amount <= 0) return true;
+
+        if (currentSpirit < amount)
+            return false;
+
+        currentSpirit -= amount;
+        OnSpiritChanged?.Invoke(currentSpirit);
+        return true;
+    }
+
+    // ================== Level Up：成本 & 升级逻辑 ==================
+
+    public int GetLevelUpCost(LevelUpStat stat)
+    {
+        switch (stat)
+        {
+            case LevelUpStat.MaxHP:
+                return hpBaseCost + hpLevel * hpCostPerLevel;
+            case LevelUpStat.MaxStamina:
+                return staminaBaseCost + staminaLevel * staminaCostPerLevel;
+            case LevelUpStat.MaxMana:
+                return manaBaseCost + manaLevel * manaCostPerLevel;
+            case LevelUpStat.PhysicalAttack:
+                return physicalBaseCost + physicalAtkLevel * physicalCostPerLevel;
+            case LevelUpStat.MagicAttack:
+                return magicBaseCost + magicAtkLevel * magicCostPerLevel;
+            default:
+                return int.MaxValue;
+        }
+    }
+
+    public bool TryLevelUp(LevelUpStat stat)
+    {
+        int cost = GetLevelUpCost(stat);
+        if (!TrySpendSpirit(cost))
+            return false;
+
+        switch (stat)
+        {
+            case LevelUpStat.MaxHP:
+                hpLevel++;
+                bonusMaxHP += hpPerLevel;
+                currentHP += hpPerLevel; // 升级顺便回一点血
+                OnHPChanged?.Invoke(currentHP, MaxHP);
+                break;
+
+            case LevelUpStat.MaxStamina:
+                staminaLevel++;
+                bonusMaxStamina += staminaPerLevel;
+                currentStamina += staminaPerLevel;
+                OnStaminaChanged?.Invoke(currentStamina, MaxStamina);
+                break;
+
+            case LevelUpStat.MaxMana:
+                manaLevel++;
+                bonusMaxMana += manaPerLevel;
+                currentMana += manaPerLevel;
+                OnManaChanged?.Invoke(currentMana, MaxMana);
+                break;
+
+            case LevelUpStat.PhysicalAttack:
+                physicalAtkLevel++;
+                physicalBonus += physicalBonusPerLevel;
+                break;
+
+            case LevelUpStat.MagicAttack:
+                magicAtkLevel++;
+                magicBonus += magicBonusPerLevel;
+                break;
+        }
+
+        return true;
     }
 
     // 暴露一个获取配置的只读接口，给 Movement/Combat 用
