@@ -1280,7 +1280,7 @@ GameObject:
   - component: {fileID: 6295830313004855710}
   - component: {fileID: 7217152792845338903}
   m_Layer: 6
-  m_Name: Enemy Melee
+  m_Name: Enemy_Minion_Melee
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1294,7 +1294,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3567858100659639866}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -1, z: -0, w: 0.000000104308114}
+  m_LocalRotation: {x: 0, y: -1, z: 0, w: 0}
   m_LocalPosition: {x: -5.119999, y: 0, z: -2.0400002}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1369,7 +1369,6 @@ MonoBehaviour:
   playerLayer:
     serializedVersion: 2
     m_Bits: 128
-  hitboxRadius: 1
   hitboxHeightOffset: 1
   debugDrawHitbox: 1
   lightStaggerTime: 0.1
@@ -1379,15 +1378,17 @@ MonoBehaviour:
   attackAngleThreshold: 0.8
   attackChance: 0.7
   attackRangeBuffer: 0.3
+  enableSecondAttack: 0
+  secondAttackChance: 0.4
   preferredMinDistFactor: 0.6
   preferredMaxDistFactor: 0.9
   strafeDistance: 1.5
   attackTrackSpeed: 2
   attackTrackStopDistance: 0.8
+  projectileSpawnPoint: {fileID: 0}
   state: 0
   stateTimer: 0
   timeInAttackZone: 0
-  projectileSpawnPoint: {fileID: 0}
   _telegraph: {fileID: 0}
 --- !u!114 &6994372148225939282
 MonoBehaviour:

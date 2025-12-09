@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 23b7e4405d614c4418e30b97f39c9b4b, type: 3}
-  m_Name: Enemy_RangeAttack_Minion
+  m_Name: Enemy_Minion_RangeAttack
   m_EditorClassIdentifier: 
   attackId: Weapon2_Magic_Light1
   hitboxShape: 0

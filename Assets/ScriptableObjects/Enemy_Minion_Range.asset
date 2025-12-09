@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2674e6468ab9990409e85880cde62ed3, type: 3}
-  m_Name: EnemyRange__Minion
+  m_Name: Enemy_Minion_Range
   m_EditorClassIdentifier: 
   maxHP: 30
   maxPoise: 40
@@ -21,7 +21,7 @@ MonoBehaviour:
   chaseSpeed: 4.5
   rotateSpeed: 12
   detectionRange: 12
-  attackRange: 50
+  attackRange: 12
   attackInterval: 1
   defaultAttack: {fileID: 11400000, guid: abf006233a245cd4d91b321e6b1b3e5e, type: 2}
   heavyAttack: {fileID: 0}

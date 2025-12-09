@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2674e6468ab9990409e85880cde62ed3, type: 3}
-  m_Name: EnemyMelee_Minion
+  m_Name: Enemy_Minion_Dash
   m_EditorClassIdentifier: 
   maxHP: 50
   maxPoise: 40
@@ -20,11 +20,11 @@ MonoBehaviour:
   moveSpeed: 0.3
   chaseSpeed: 4.5
   rotateSpeed: 12
-  detectionRange: 8
-  attackRange: 1.8
+  detectionRange: 12
+  attackRange: 3.5
   attackInterval: 1
-  defaultAttack: {fileID: 11400000, guid: 68f0fa0735406db47925cdce891850e0, type: 2}
-  heavyAttack: {fileID: 11400000, guid: 376dcb8e08f292047acf93c4831cbbf7, type: 2}
+  defaultAttack: {fileID: 11400000, guid: f3c5bd2b347c96a4f8f427987a53d7fd, type: 2}
+  heavyAttack: {fileID: 0}
   impactProfile: {fileID: 11400000, guid: 346378d05ca706d46a020b621d1f80dc, type: 2}
   hitFlashColor: {r: 1, g: 1, b: 1, a: 1}
   hitFlashDuration: 0.1

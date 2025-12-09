@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 23b7e4405d614c4418e30b97f39c9b4b, type: 3}
-  m_Name: Enemy_MeleeAttack_Elite
+  m_Name: Enemy_Minion_MeleeAttack
   m_EditorClassIdentifier: 
   attackId: enemy_slash_1
   hitboxShape: 0
-  hitboxLocalOffset: {x: 0, y: 0, z: 0}
+  hitboxLocalOffset: {x: 0, y: 0, z: 1}
   hitboxRadius: 1
   hitboxBoxHalfExtents: {x: 0.5, y: 0.5, z: 1}
   hitboxCapsuleRadius: 0.7
@@ -23,11 +23,11 @@ MonoBehaviour:
   startup: 0.5
   active: 0.12
   recovery: 0.3
-  hitStartTime: 0.7
-  hitEndTime: 0.72
+  hitStartTime: 0.6
+  hitEndTime: 0.62
   staminaCost: 0
   manaCost: 0
-  damage: 30
+  damage: 15
   physicalCoef: 1
   magicCoef: 0
   moveMultiplierStartup: 0.4

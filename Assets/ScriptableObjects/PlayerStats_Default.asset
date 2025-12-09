@@ -29,4 +29,4 @@ MonoBehaviour:
   dodgeStaminaCost: 10
   dodgeCooldown: 0.3
   dodgeIFrameStart: 0.05
-  dodgeIFrameEnd: 0.2
+  dodgeIFrameEnd: 0.22

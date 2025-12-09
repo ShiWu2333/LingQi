@@ -10,32 +10,32 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 23b7e4405d614c4418e30b97f39c9b4b, type: 3}
-  m_Name: Enemy_MeleeAttack_Minion
+  m_Name: Enemy_Elite_DashAttack
   m_EditorClassIdentifier: 
   attackId: enemy_slash_1
-  hitboxShape: 0
-  hitboxLocalOffset: {x: 0, y: 0, z: 0}
+  hitboxShape: 1
+  hitboxLocalOffset: {x: 0, y: 0, z: 1.5}
   hitboxRadius: 1
   hitboxBoxHalfExtents: {x: 0.5, y: 0.5, z: 1}
   hitboxCapsuleRadius: 0.7
   hitboxCapsuleHeight: 2
   hitboxCapsuleDirection: {x: 0, y: 0, z: 1}
-  startup: 0.5
-  active: 0.12
+  startup: 0.3
+  active: 0.25
   recovery: 0.3
-  hitStartTime: 0.7
-  hitEndTime: 0.72
+  hitStartTime: 0.5
+  hitEndTime: 0.55
   staminaCost: 0
   manaCost: 0
-  damage: 15
+  damage: 20
   physicalCoef: 1
   magicCoef: 0
-  moveMultiplierStartup: 0.4
-  moveMultiplierActive: 0.2
+  moveMultiplierStartup: 0
+  moveMultiplierActive: 0
   moveMultiplierRecovery: 0.7
-  stepForward: 0
-  stepDistance: 1
-  stepDuration: 0.1
+  stepForward: 1
+  stepDistance: 3
+  stepDuration: 0.3
   cancelableAfter: 0.1
   poiseDamage: 0
   impact: 0
