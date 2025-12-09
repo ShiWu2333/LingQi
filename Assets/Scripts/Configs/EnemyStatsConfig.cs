@@ -5,41 +5,76 @@ using UnityEngine;
     menuName = "GameConfigs/Combat/Enemy Stats Config")]
 public class EnemyStatsConfig : ScriptableObject
 {
-    [Header("=== »ù´¡ÊôĞÔ ===")]
+    [Header("===  ===")]
     public float maxHP = 50f;
 
-    [Header("=== ÈÍĞÔ£¨Poise£©===")]
+    [Header("=== Ô£Poise===")]
     public float maxPoise = 40f;
     public float poiseRegenDelay = 1.5f;
     public float poiseRegenPerSecond = 20f;
     public float breakDuration = 1.0f;
 
-    [Header("=== ĞĞÎªÊôĞÔ£¨AI ÓÃ£©===")]
+    [Header("=== ÎªÔ£AI Ã£===")]
     public float moveSpeed = 3f;
     public float chaseSpeed = 4f;
     public float rotateSpeed = 12f;
 
-    [Tooltip("·¢ÏÖÍæ¼ÒµÄ·¶Î§")]
+    [Tooltip("ÒµÄ·Î§")]
     public float detectionRange = 10f;
 
-    [Tooltip("¹¥»÷¾àÀë£¨AI Í£ÏÂÀ´¹¥»÷£©")]
+    [Tooltip("ë£¨AI Í£")]
     public float attackRange = 1.8f;
 
-    [Tooltip("Ã¿¸ô¶à¾Ã¹¥»÷Ò»´Î")]
+    [Tooltip("Ã¿Ã¹Ò»")]
     public float attackInterval = 1.5f;
 
-    [Header("=== ¹¥»÷Êı¾İ ===")]
-    [Tooltip("µĞÈËÄ¬ÈÏµÄ¹¥»÷¶¯×÷")]
+    [Header("=== AI Behaviour ===")]
+    [Tooltip(" hitbox ÒµÆ«")]
+    public float hitboxHeightOffset = 1.0f;
+
+    [Tooltip("Ô¶æ¡£ Ú½Óµ attack Ö®Ç°ÙµÊ±")]
+    public float attackReactionTime = 0.4f;
+    [Tooltip("dot é˜ˆÖµï¼Œå¤§æ¦‚ 36Â° å†…æ‰å‡ºæ‰‹")]
+    public float attackAngleThreshold = 0.8f;
+    [Tooltip("æ»¡è¶³æ¡ä»¶æ—¶æœ¬æ¬¡æ˜¯å¦å‡ºæ‰‹çš„æ¦‚ç‡")]
+    public float attackChance = 0.7f;
+    [Tooltip("æ”»å‡»èŒƒå›´çš„ç¼“å†²åŒºï¼ˆç¨å¾®è¿œä¸€ç‚¹ä¹Ÿç®—è¿›æ”»åŒºåŸŸï¼‰")]
+    public float attackRangeBuffer = 0.3f;
+
+    [Tooltip("æ˜¯å¦å…è®¸æ•Œäººéšæœºä½¿ç”¨ç¬¬äºŒç§æ”»å‡»")]
+    public bool enableSecondAttack = false;
+    [Range(0f, 1f)]
+    [Tooltip("å½“å…è®¸ç¬¬äºŒç§æ”»å‡»æ—¶ï¼Œæœ¬æ¬¡å‡ºæ‰‹æ”¹ç”¨ heavyAttack çš„æ¦‚ç‡")]
+    public float secondAttackChance = 0.4f;
+
+    [Tooltip("attackRange * è¿™ä¸ª = å¤ªè¿‘ï¼Œä¸‹æ’¤")]
+    public float preferredMinDistFactor = 0.6f;
+    [Tooltip("attackRange * è¿™ä¸ª = èˆ’æœçš„ä¸­è·ç¦»")]
+    public float preferredMaxDistFactor = 0.9f;
+    [Tooltip("ç»•åœˆæ—¶ä¾§ç§»è·ç¦»")]
+    public float strafeDistance = 1.5f;
+
+    [Tooltip("æŠ¬æ‰‹é˜¶æ®µçš„æ…¢é€Ÿç§»åŠ¨é€Ÿåº¦")]
+    public float attackTrackSpeed = 2.0f;
+    [Tooltip("æƒ³è¦ç«™åœ¨ attackRange*è¿™ä¸ª çš„ä½ç½®å‡ºåˆ€")]
+    public float attackTrackStopDistance = 0.8f;
+
+    [Header("===  ===")]
+    [Tooltip("Ä¬ÏµÄ¹")]
     public AttackData defaultAttack;
 
-    [Tooltip("¸üÇ¿µÄ¹¥»÷£¨¿ÉÑ¡£©")]
+    [Tooltip("Ç¿Ä¹Ñ¡")]
     public AttackData heavyAttack;
 
-    [Header("=== ³å»÷Á¦·´Ó¦±í ===")]
-    [Tooltip("²»Í¬×´Ì¬ÏÂ¶Ô²»Í¬³å»÷Á¦µÄÓ²Ö±·´Ó¦")]
+    [Header("=== Ó¦ ===")]
+    [Tooltip("Í¬×´Ì¬Â¶Ô²Í¬Ó²Ö±Ó¦")]
     public ImpactProfile impactProfile;
 
-    [Header("=== ÊÜ»÷·´À¡£¨¿ÉÑ¡£© ===")]
+    [Header("=== Ü»Ñ¡ ===")]
     public Color hitFlashColor = Color.white;
     public float hitFlashDuration = 0.1f;
+
+    [Header("===  ===")]
+    [Tooltip("å‡»æ€åç»™äºˆç©å®¶çš„çµåŠ›æ•°é‡")]
+    public int spiritReward = 1;
 }

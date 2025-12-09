@@ -6,7 +6,7 @@ public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement")]
     [SerializeField] private float fallbackMoveSpeed = 6f;   // 没有 stats 时用
-    [SerializeField] private float rotationSpeed = 12f;
+    [SerializeField] private float fallbackRotationSpeed = 12f;
 
     [Header("Gravity")]
     [SerializeField] private bool useGravity = true;
@@ -17,7 +17,7 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("Lock-On")]
     [SerializeField] private KeyCode lockOnKey = KeyCode.Q;
-    [SerializeField] private float lockOnMaxDistance = 15f;
+    [SerializeField] private float fallbackLockOnMaxDistance = 15f;
     [SerializeField] private LayerMask lockOnEnemyLayers = ~0;   // 可以指定 Enemy 层
     [SerializeField] private bool debugLockOn = false;
 
@@ -47,6 +47,28 @@ public class PlayerMovement : MonoBehaviour
                 return resources.StatsConfig.moveSpeed;
 
             return fallbackMoveSpeed;
+        }
+    }
+
+    private float CurrentRotationSpeed
+    {
+        get
+        {
+            if (resources != null && resources.StatsConfig != null)
+                return resources.StatsConfig.rotationSpeed;
+
+            return fallbackRotationSpeed;
+        }
+    }
+
+    private float CurrentLockOnMaxDistance
+    {
+        get
+        {
+            if (resources != null && resources.StatsConfig != null)
+                return resources.StatsConfig.lockOnMaxDistance;
+
+            return fallbackLockOnMaxDistance;
         }
     }
 
@@ -191,14 +213,14 @@ public class PlayerMovement : MonoBehaviour
         }
 
         float distSqr = (lockOnTarget.position - transform.position).sqrMagnitude;
-        if (distSqr > lockOnMaxDistance * lockOnMaxDistance)
+        if (distSqr > CurrentLockOnMaxDistance * CurrentLockOnMaxDistance)
         {
             lockOnTarget = null;
         }
     }
 
     /// <summary>
-    /// 在 lockOnMaxDistance 范围内，选择“屏幕上离鼠标最近”的敌人。
+    /// 在锁定距离范围内，选择“屏幕上离鼠标最近”的敌人。
     /// </summary>
     private Transform FindBestLockOnTarget()
     {
@@ -224,7 +246,7 @@ public class PlayerMovement : MonoBehaviour
             // 距离限制
             Vector3 toEnemy = t.position - transform.position;
             float distSqr = toEnemy.sqrMagnitude;
-            if (distSqr > lockOnMaxDistance * lockOnMaxDistance)
+            if (distSqr > CurrentLockOnMaxDistance * CurrentLockOnMaxDistance)
                 continue;
 
             // 屏幕空间位置
@@ -272,7 +294,7 @@ public class PlayerMovement : MonoBehaviour
                     transform.rotation = Quaternion.Slerp(
                         transform.rotation,
                         targetRotation,
-                        rotationSpeed * Time.deltaTime);
+                        CurrentRotationSpeed * Time.deltaTime);
                     return;
                 }
             }
@@ -292,7 +314,7 @@ public class PlayerMovement : MonoBehaviour
         transform.rotation = Quaternion.Slerp(
             transform.rotation,
             target,
-            rotationSpeed * Time.deltaTime);
+            CurrentRotationSpeed * Time.deltaTime);
     }
 
     private void RotateTowardsDirection(Vector3 direction)
@@ -304,7 +326,7 @@ public class PlayerMovement : MonoBehaviour
         transform.rotation = Quaternion.Slerp(
             transform.rotation,
             targetRotation,
-            rotationSpeed * Time.deltaTime);
+            CurrentRotationSpeed * Time.deltaTime);
     }
 
     // =========================================================

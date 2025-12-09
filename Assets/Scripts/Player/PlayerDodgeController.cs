@@ -6,7 +6,7 @@ using System;
 public class PlayerDodgeController : MonoBehaviour
 {
     [Header("Dash Attack Window")]
-    [SerializeField] private float dashAttackWindow = 0.25f;   // 闪避结束后还能接 Dash 攻击的时间
+    [SerializeField] private float dashAttackWindow;   // 闪避结束后还能接 Dash 攻击的时间
 
     private float postDodgeTimer;
 
@@ -83,6 +83,7 @@ public class PlayerDodgeController : MonoBehaviour
             dodgeCooldown = 0.7f;
             dodgeIFrameStart = 0.05f;
             dodgeIFrameEnd = 0.20f;
+            dashAttackWindow = 0.25f;
             return;
         }
 
@@ -93,6 +94,7 @@ public class PlayerDodgeController : MonoBehaviour
         dodgeCooldown = s.dodgeCooldown;
         dodgeIFrameStart = s.dodgeIFrameStart;
         dodgeIFrameEnd = s.dodgeIFrameEnd;
+        dashAttackWindow = s.dashAttackWindow;
     }
 
     private void Update()
