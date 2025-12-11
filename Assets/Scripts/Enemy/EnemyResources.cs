@@ -10,6 +10,7 @@ public class EnemyResources : MonoBehaviour
     [Header("Runtime (ReadOnly)")]
     [SerializeField] private float currentHP;
 
+
     public event Action<float, float> OnHPChanged;
     public event Action OnDeath;
     public event Action<float> OnDamaged;
@@ -89,6 +90,7 @@ public class EnemyResources : MonoBehaviour
     {
         Debug.Log("[EnemyResources] Enemy died.", this);
         OnDeath?.Invoke();
+
 
         // ========= 新增：击杀奖励灵力 =========
         int reward = stats != null ? stats.spiritReward : 0;
