@@ -1360,22 +1360,8 @@ MonoBehaviour:
   playerLayer:
     serializedVersion: 2
     m_Bits: 128
-  hitboxHeightOffset: 1
+  combatBalanceConfig: {fileID: 11400000, guid: 1062630389602db4882cec3db915dd4a, type: 2}
   debugDrawHitbox: 1
-  lightStaggerTime: 0.1
-  mediumStaggerTime: 0.35
-  heavyStaggerTime: 0.6
-  attackReactionTime: 0.4
-  attackAngleThreshold: 0.8
-  attackChance: 0.7
-  attackRangeBuffer: 0.3
-  enableSecondAttack: 0
-  secondAttackChance: 0.4
-  preferredMinDistFactor: 0.6
-  preferredMaxDistFactor: 0.9
-  strafeDistance: 1.5
-  attackTrackSpeed: 2
-  attackTrackStopDistance: 0.8
   projectileSpawnPoint: {fileID: 6889134352370064196}
   state: 0
   stateTimer: 0
@@ -1410,7 +1396,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   stats: {fileID: 11400000, guid: 909f10bc7ec998c429b870057838b5d7, type: 2}
   currentHP: 0
-  spiritReward: 5
 --- !u!114 &4090817383216735638
 MonoBehaviour:
   m_ObjectHideFlags: 0

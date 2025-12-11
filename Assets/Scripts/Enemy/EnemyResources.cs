@@ -10,9 +10,6 @@ public class EnemyResources : MonoBehaviour
     [Header("Runtime (ReadOnly)")]
     [SerializeField] private float currentHP;
 
-    [Header("Reward")]
-    [Tooltip("击杀后给予玩家的灵力数量")]
-    [SerializeField] private int spiritReward = 1;
 
     public event Action<float, float> OnHPChanged;
     public event Action OnDeath;
@@ -94,8 +91,10 @@ public class EnemyResources : MonoBehaviour
         Debug.Log("[EnemyResources] Enemy died.", this);
         OnDeath?.Invoke();
 
+
         // ========= 新增：击杀奖励灵力 =========
-        if (spiritReward > 0)
+        int reward = stats != null ? stats.spiritReward : 0;
+        if (reward > 0)
         {
             GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
             if (playerObj != null)
@@ -103,7 +102,7 @@ public class EnemyResources : MonoBehaviour
                 var playerRes = playerObj.GetComponent<PlayerResources>();
                 if (playerRes != null)
                 {
-                    playerRes.AddSpirit(spiritReward);
+                    playerRes.AddSpirit(reward);
                 }
             }
         }

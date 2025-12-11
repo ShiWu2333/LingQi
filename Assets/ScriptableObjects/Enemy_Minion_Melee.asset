@@ -23,8 +23,21 @@ MonoBehaviour:
   detectionRange: 8
   attackRange: 1.8
   attackInterval: 1
+  hitboxHeightOffset: 1
+  attackReactionTime: 0.4
+  attackAngleThreshold: 0.8
+  attackChance: 0.7
+  attackRangeBuffer: 0.3
+  enableSecondAttack: 0
+  secondAttackChance: 0.4
+  preferredMinDistFactor: 0.6
+  preferredMaxDistFactor: 0.9
+  strafeDistance: 1.5
+  attackTrackSpeed: 2
+  attackTrackStopDistance: 0.8
   defaultAttack: {fileID: 11400000, guid: 68f0fa0735406db47925cdce891850e0, type: 2}
   heavyAttack: {fileID: 11400000, guid: 376dcb8e08f292047acf93c4831cbbf7, type: 2}
   impactProfile: {fileID: 11400000, guid: 346378d05ca706d46a020b621d1f80dc, type: 2}
   hitFlashColor: {r: 1, g: 1, b: 1, a: 1}
   hitFlashDuration: 0.1
+  spiritReward: 10

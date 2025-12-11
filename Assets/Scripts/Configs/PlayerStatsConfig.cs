@@ -10,6 +10,8 @@ public class PlayerStatsConfig : ScriptableObject
 
     [Header("Movement")]
     public float moveSpeed = 6f;
+    public float rotationSpeed = 12f;
+    public float lockOnMaxDistance = 15f;
 
     [Header("Stamina")]
     public float maxStamina = 100f;
@@ -20,13 +22,13 @@ public class PlayerStatsConfig : ScriptableObject
     public float maxMana = 50f;
     public float manaRegenPerSecond = 3f;
 
-    [Header("Poise / 韧性")]
+    [Header("Poise / ")]
     public float maxPoise = 100f;
     public float poiseRegenDelay = 2f;
     public float poiseRegenPerSecond = 30f;
     public float breakDuration = 2f;
 
-    [Header("Impact / 冲击力反应表")]
+    [Header("Impact / 应")]
     public ImpactProfile impactProfile;
 
     [Header("Dodge")]
@@ -34,11 +36,11 @@ public class PlayerStatsConfig : ScriptableObject
     public float dodgeDuration = 0.22f;
     public float dodgeStaminaCost = 20f;
     public float dodgeCooldown = 0.7f;
+    public float dashAttackWindow = 0.25f;
 
-    [Tooltip("闪避开始多少秒后进入 i-frame")]
+    [Tooltip("芸始 i-frame")]
     public float dodgeIFrameStart = 0.05f;
 
-    [Tooltip("从闪避开始起，i-frame 持续到多少秒结束")]
+    [Tooltip("芸始i-frame ")]
     public float dodgeIFrameEnd = 0.20f;
-
 }

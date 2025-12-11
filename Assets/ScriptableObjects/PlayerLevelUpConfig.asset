@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 507268e27a483414faef11b9dacade02, type: 3}
+  m_Name: PlayerLevelUpConfig
+  m_EditorClassIdentifier: 
+  hpBaseCost: 5
+  hpCostPerLevel: 5
+  staminaBaseCost: 4
+  staminaCostPerLevel: 4
+  manaBaseCost: 5
+  manaCostPerLevel: 5
+  physicalBaseCost: 6
+  physicalCostPerLevel: 3
+  magicBaseCost: 6
+  magicCostPerLevel: 3
+  hpPerLevel: 10
+  staminaPerLevel: 5
+  manaPerLevel: 10
+  physicalBonusPerLevel: 0.3
+  magicBonusPerLevel: 0.3

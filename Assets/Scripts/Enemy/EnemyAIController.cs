@@ -18,35 +18,8 @@ public class EnemyAIController : MonoBehaviour, IAttackSource
 
     [Header("Config")]
     [SerializeField] private LayerMask playerLayer;
-    [SerializeField] private float hitboxHeightOffset = 1.0f;
+    [SerializeField] private CombatBalanceConfig combatBalanceConfig;
     [SerializeField] private bool debugDrawHitbox = false;
-
-    [Header("Stagger Config")]
-    [SerializeField] private float lightStaggerTime = 0.1f;
-    [SerializeField] private float mediumStaggerTime = 0.35f;
-    [SerializeField] private float heavyStaggerTime = 0.6f;
-
-    [Header("Attack Decision")]
-    [SerializeField] private float attackReactionTime = 0.4f;   // 进入攻击区后，至少观察多久才可能出手
-    [SerializeField] private float attackAngleThreshold = 0.8f; // dot 阈值，大概 36° 内才出手
-    [SerializeField] private float attackChance = 0.7f;         // 满足条件时本次是否出手的概率
-    [SerializeField] private float attackRangeBuffer = 0.3f;    // 攻击范围的缓冲区（稍微远一点也算进攻区域）
-
-    [Header("Attack Variants")]
-    [Tooltip("是否允许敌人随机使用第二种攻击（Stats.heavyAttack）")]
-    [SerializeField] private bool enableSecondAttack = false;
-
-    [Tooltip("当允许第二种攻击时，本次出手改用 heavyAttack 的概率")]
-    [SerializeField][Range(0f, 1f)] private float secondAttackChance = 0.4f;
-
-    [Header("Spacing / Strafe")]
-    [SerializeField] private float preferredMinDistFactor = 0.6f;  // attackRange * 这个 = 太近，下撤
-    [SerializeField] private float preferredMaxDistFactor = 0.9f;  // attackRange * 这个 = 舒服的中距离
-    [SerializeField] private float strafeDistance = 1.5f;          // 绕圈时侧移距离
-
-    [Header("Attack Tracking (吸附)")]
-    [SerializeField] private float attackTrackSpeed = 2.0f;       // 抬手阶段的慢速移动速度
-    [SerializeField] private float attackTrackStopDistance = 0.8f;// 想要站在 attackRange*这个 的位置出刀
 
     [Header("Projectile")]
     [SerializeField] private Transform projectileSpawnPoint;
@@ -61,6 +34,8 @@ public class EnemyAIController : MonoBehaviour, IAttackSource
     private EnemyPoiseController _poise;
     private Transform _player;
     private AttackData _attackData;
+    private EnemyStatsConfig Stats => _resources != null ? _resources.Stats : null;
+    private float HitboxHeightOffset => Stats != null ? Stats.hitboxHeightOffset : 1.0f;
 
     [Header("Telegraph")]
     [SerializeField] private AttackTelegraph _telegraph;
@@ -102,7 +77,7 @@ public class EnemyAIController : MonoBehaviour, IAttackSource
         if (_telegraph == null)
             _telegraph = GetComponentInChildren<AttackTelegraph>();
 
-        if (_resources.Stats == null)
+        if (Stats == null)
         {
             Debug.LogError("[EnemyAI] EnemyStatsConfig is missing on EnemyResources.", this);
             enabled = false;
@@ -113,16 +88,22 @@ public class EnemyAIController : MonoBehaviour, IAttackSource
             _poise.OnImpactReaction += HandleImpactReaction;
 
         // 默认攻击（可以在 EnemyStatsConfig 里把 defaultAttack 配成 DashAttack）
-        _attackData = _resources.Stats.defaultAttack;
+        _attackData = Stats.defaultAttack;
         if (_attackData == null)
         {
             Debug.LogWarning("[EnemyAI] defaultAttack is not assigned in EnemyStatsConfig.", this);
         }
 
+        if (combatBalanceConfig == null)
+        {
+            combatBalanceConfig = ScriptableObject.CreateInstance<CombatBalanceConfig>();
+            Debug.LogWarning("[EnemyAI] CombatBalanceConfig not assigned. Using default inline config.", this);
+        }
+
         // NavMeshAgent 参数
-        _agent.speed = _resources.Stats.chaseSpeed;
-        _agent.angularSpeed = _resources.Stats.rotateSpeed;
-        _agent.stoppingDistance = _resources.Stats.attackRange * 0.8f;
+        _agent.speed = Stats.chaseSpeed;
+        _agent.angularSpeed = Stats.rotateSpeed;
+        _agent.stoppingDistance = Stats.attackRange * 0.8f;
     }
 
     private void Start()
@@ -175,17 +156,17 @@ public class EnemyAIController : MonoBehaviour, IAttackSource
                 break;
 
             case ImpactReaction.LightStagger:
-                EnterStagger(lightStaggerTime);
+                EnterStagger(combatBalanceConfig.lightStaggerDuration);
                 PlaySmallStagger();
                 break;
 
             case ImpactReaction.MediumStagger:
-                EnterStagger(mediumStaggerTime);
+                EnterStagger(combatBalanceConfig.mediumStaggerDuration);
                 PlayMediumStagger();
                 break;
 
             case ImpactReaction.HeavyStagger:
-                EnterStagger(heavyStaggerTime);
+                EnterStagger(combatBalanceConfig.heavyStaggerDuration);
                 PlayLargeStagger();
                 break;
         }
@@ -218,7 +199,7 @@ public class EnemyAIController : MonoBehaviour, IAttackSource
             }
 
             float dist = Vector3.Distance(transform.position, _player.position);
-            if (dist <= _resources.Stats.detectionRange)
+            if (dist <= Stats.detectionRange)
                 SwitchState(EnemyState.Chase);
             else
                 SwitchState(EnemyState.Idle);
@@ -254,7 +235,7 @@ public class EnemyAIController : MonoBehaviour, IAttackSource
     private void TickIdle()
     {
         float dist = Vector3.Distance(transform.position, _player.position);
-        if (dist <= _resources.Stats.detectionRange)
+        if (dist <= Stats.detectionRange)
             SwitchState(EnemyState.Chase);
     }
 
@@ -263,7 +244,7 @@ public class EnemyAIController : MonoBehaviour, IAttackSource
         if (_agent == null || !_agent.enabled || !_agent.isOnNavMesh || _player == null)
             return;
 
-        EnemyStatsConfig stats = _resources.Stats;
+        EnemyStatsConfig stats = Stats;
 
         float dist = Vector3.Distance(transform.position, _player.position);
 
@@ -279,7 +260,7 @@ public class EnemyAIController : MonoBehaviour, IAttackSource
 
         // 计算“进攻区域”
         float attackRange = stats.attackRange;
-        float attackZone = attackRange + attackRangeBuffer;
+        float attackZone = attackRange + stats.attackRangeBuffer;
         bool inAttackZone = dist <= attackZone;
 
         if (inAttackZone)
@@ -307,8 +288,8 @@ public class EnemyAIController : MonoBehaviour, IAttackSource
         }
 
         // 简单拉距 / 绕圈逻辑
-        float preferredMin = attackRange * preferredMinDistFactor;
-        float preferredMax = attackRange * preferredMaxDistFactor;
+        float preferredMin = attackRange * stats.preferredMinDistFactor;
+        float preferredMax = attackRange * stats.preferredMaxDistFactor;
 
         if (dist < preferredMin)
         {
@@ -326,7 +307,7 @@ public class EnemyAIController : MonoBehaviour, IAttackSource
             float sideSign = (UnityEngine.Random.value > 0.5f) ? 1f : -1f;
             sideDir *= sideSign;
 
-            Vector3 strafeTarget = transform.position + sideDir * strafeDistance;
+            Vector3 strafeTarget = transform.position + sideDir * stats.strafeDistance;
             _agent.SetDestination(strafeTarget);
         }
         else
@@ -346,28 +327,28 @@ public class EnemyAIController : MonoBehaviour, IAttackSource
             return;
 
         // 1）需要在进攻区域停留至少一段时间（反应时间）
-        if (timeInAttackZone < attackReactionTime)
+        if (timeInAttackZone < stats.attackReactionTime)
             return;
 
         // 2）朝向玩家角度要比较正
         if (dirSq > 0.001f)
         {
             float dot = Vector3.Dot(transform.forward, dir);
-            if (dot < attackAngleThreshold)
+            if (dot < stats.attackAngleThreshold)
                 return;
         }
 
         // 3）再加一点随机概率，避免节奏太机械
-        if (UnityEngine.Random.value > attackChance)
+        if (UnityEngine.Random.value > stats.attackChance)
             return;
 
         // 4）到这里已经确定“要出手一次”，现在才随机选具体哪一招
         AttackData selected = stats.defaultAttack;
 
-        if (enableSecondAttack && stats.heavyAttack != null)
+        if (stats.enableSecondAttack && stats.heavyAttack != null)
         {
             // 随机决定本次是否用第二种攻击
-            if (UnityEngine.Random.value < secondAttackChance)
+            if (UnityEngine.Random.value < stats.secondAttackChance)
                 selected = stats.heavyAttack;
         }
 
@@ -424,7 +405,7 @@ public class EnemyAIController : MonoBehaviour, IAttackSource
                     transform.rotation = Quaternion.Slerp(
                         transform.rotation,
                         targetRot,
-                        _resources.Stats.rotateSpeed * dt);
+                        Stats.rotateSpeed * dt);
                 }
             }
 
@@ -555,7 +536,7 @@ public class EnemyAIController : MonoBehaviour, IAttackSource
 
     private void TickCooldown()
     {
-        if (stateTimer >= _resources.Stats.attackInterval)
+        if (stateTimer >= Stats.attackInterval)
         {
             SwitchState(EnemyState.Chase);
         }
@@ -569,7 +550,7 @@ public class EnemyAIController : MonoBehaviour, IAttackSource
             return;
 
         Vector3 localOffset = _attackData.hitboxLocalOffset;
-        localOffset.y += hitboxHeightOffset;
+        localOffset.y += HitboxHeightOffset;
         Vector3 center = transform.position + transform.rotation * localOffset;
 
         lastHitboxCenter = center;
@@ -669,8 +650,8 @@ public class EnemyAIController : MonoBehaviour, IAttackSource
         else
         {
             spawnPos = transform.position
-                       + transform.forward * (_resources.Stats.attackRange * 0.5f)
-                       + Vector3.up * hitboxHeightOffset;
+                       + transform.forward * (Stats.attackRange * 0.5f)
+                       + Vector3.up * HitboxHeightOffset;
         }
 
         Vector3 dir;

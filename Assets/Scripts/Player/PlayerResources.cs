@@ -6,6 +6,7 @@ public class PlayerResources : MonoBehaviour
 {
     [Header("Config")]
     [SerializeField] private PlayerStatsConfig stats;
+    [SerializeField] private LevelUpConfig levelUpConfig;
 
     [Header("Runtime Values (ReadOnly in Inspector)")]
     [SerializeField] private float currentHP;
@@ -40,36 +41,12 @@ public class PlayerResources : MonoBehaviour
     public float PhysicalBonus => physicalBonus;
     public float MagicBonus => magicBonus;
 
-    // ================== Level Up - Config（Inspector 可调） ==================
-
-    [Header("Level Up - Cost Config")]
-    [SerializeField] private int hpBaseCost = 5;
-    [SerializeField] private int hpCostPerLevel = 5;
-
-    [SerializeField] private int staminaBaseCost = 4;
-    [SerializeField] private int staminaCostPerLevel = 4;
-
-    [SerializeField] private int manaBaseCost = 5;
-    [SerializeField] private int manaCostPerLevel = 5;
-
-    [SerializeField] private int physicalBaseCost = 6;
-    [SerializeField] private int physicalCostPerLevel = 3;
-
-    [SerializeField] private int magicBaseCost = 6;
-    [SerializeField] private int magicCostPerLevel = 3;
-
-    [Header("Level Up - Gain Config")]
-    [SerializeField] private float hpPerLevel = 10f;
-    [SerializeField] private float staminaPerLevel = 5f;
-    [SerializeField] private float manaPerLevel = 10f;
-    [SerializeField] private float physicalBonusPerLevel = 0.02f; // +2%
-    [SerializeField] private float magicBonusPerLevel = 0.02f;    // +2%
-
     // ================== 内部状态 ==================
 
     private float staminaRegenDelayTimer;
     private PlayerDodgeController dodge;
     private FlashOnHit _flashOnHit;
+    private LevelUpConfig activeLevelUpConfig;
 
     // 事件：以后 UI / 其他系统可以订阅
     public event Action<float, float> OnHPChanged;
@@ -101,6 +78,16 @@ public class PlayerResources : MonoBehaviour
 
         dodge = GetComponent<PlayerDodgeController>();
         _flashOnHit = GetComponentInChildren<FlashOnHit>();
+
+        if (levelUpConfig != null)
+        {
+            activeLevelUpConfig = levelUpConfig;
+        }
+        else
+        {
+            activeLevelUpConfig = ScriptableObject.CreateInstance<LevelUpConfig>();
+            Debug.LogWarning("[PlayerResources] LevelUpConfig is not assigned. Using default inline config.", this);
+        }
 
         InitFromConfig();
     }
@@ -281,20 +268,34 @@ public class PlayerResources : MonoBehaviour
 
     // ================== Level Up：成本 & 升级逻辑 ==================
 
+    private LevelUpConfig GetLevelUpConfig()
+    {
+        if (activeLevelUpConfig == null)
+        {
+            activeLevelUpConfig = levelUpConfig != null
+                ? levelUpConfig
+                : ScriptableObject.CreateInstance<LevelUpConfig>();
+        }
+
+        return activeLevelUpConfig;
+    }
+
     public int GetLevelUpCost(LevelUpStat stat)
     {
+        LevelUpConfig config = GetLevelUpConfig();
+
         switch (stat)
         {
             case LevelUpStat.MaxHP:
-                return hpBaseCost + hpLevel * hpCostPerLevel;
+                return config.hpBaseCost + hpLevel * config.hpCostPerLevel;
             case LevelUpStat.MaxStamina:
-                return staminaBaseCost + staminaLevel * staminaCostPerLevel;
+                return config.staminaBaseCost + staminaLevel * config.staminaCostPerLevel;
             case LevelUpStat.MaxMana:
-                return manaBaseCost + manaLevel * manaCostPerLevel;
+                return config.manaBaseCost + manaLevel * config.manaCostPerLevel;
             case LevelUpStat.PhysicalAttack:
-                return physicalBaseCost + physicalAtkLevel * physicalCostPerLevel;
+                return config.physicalBaseCost + physicalAtkLevel * config.physicalCostPerLevel;
             case LevelUpStat.MagicAttack:
-                return magicBaseCost + magicAtkLevel * magicCostPerLevel;
+                return config.magicBaseCost + magicAtkLevel * config.magicCostPerLevel;
             default:
                 return int.MaxValue;
         }
@@ -302,6 +303,7 @@ public class PlayerResources : MonoBehaviour
 
     public bool TryLevelUp(LevelUpStat stat)
     {
+        LevelUpConfig config = GetLevelUpConfig();
         int cost = GetLevelUpCost(stat);
         if (!TrySpendSpirit(cost))
             return false;
@@ -310,33 +312,33 @@ public class PlayerResources : MonoBehaviour
         {
             case LevelUpStat.MaxHP:
                 hpLevel++;
-                bonusMaxHP += hpPerLevel;
-                currentHP += hpPerLevel; // 升级顺便回一点血
+                bonusMaxHP += config.hpPerLevel;
+                currentHP += config.hpPerLevel; // 升级顺便回一点血
                 OnHPChanged?.Invoke(currentHP, MaxHP);
                 break;
 
             case LevelUpStat.MaxStamina:
                 staminaLevel++;
-                bonusMaxStamina += staminaPerLevel;
-                currentStamina += staminaPerLevel;
+                bonusMaxStamina += config.staminaPerLevel;
+                currentStamina += config.staminaPerLevel;
                 OnStaminaChanged?.Invoke(currentStamina, MaxStamina);
                 break;
 
             case LevelUpStat.MaxMana:
                 manaLevel++;
-                bonusMaxMana += manaPerLevel;
-                currentMana += manaPerLevel;
+                bonusMaxMana += config.manaPerLevel;
+                currentMana += config.manaPerLevel;
                 OnManaChanged?.Invoke(currentMana, MaxMana);
                 break;
 
             case LevelUpStat.PhysicalAttack:
                 physicalAtkLevel++;
-                physicalBonus += physicalBonusPerLevel;
+                physicalBonus += config.physicalBonusPerLevel;
                 break;
 
             case LevelUpStat.MagicAttack:
                 magicAtkLevel++;
-                magicBonus += magicBonusPerLevel;
+                magicBonus += config.magicBonusPerLevel;
                 break;
         }
 
