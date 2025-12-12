@@ -1279,6 +1279,7 @@ GameObject:
   - component: {fileID: 562926516230206211}
   - component: {fileID: 6295830313004855710}
   - component: {fileID: 7217152792845338903}
+  - component: {fileID: 9056982910478571985}
   m_Layer: 6
   m_Name: Enemy_Minion_Melee
   m_TagString: Untagged
@@ -1456,6 +1457,23 @@ MonoBehaviour:
   spawnPoint: {fileID: 504633517042686140}
   telegraphDelay: 0.2
   autoDestroyTime: 0
+--- !u!114 &9056982910478571985
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3567858100659639866}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 247ffacb7dcb5974b9367f394694aed2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  lootContainerPrefab: {fileID: 1302933692980230194, guid: b9592886abbf2c440811e573061cbc30, type: 3}
+  spawnOffset: {x: 0, y: 0, z: 0}
+  lootTable: {fileID: 11400000, guid: 94170dc49088b6f4b83396d9c767cc9d, type: 2}
+  overrideRolls: -1
+  destroyContainerWhenEmpty: 0
 --- !u!1 &3724921215750270931
 GameObject:
   m_ObjectHideFlags: 0

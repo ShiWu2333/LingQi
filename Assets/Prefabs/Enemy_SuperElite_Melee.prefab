@@ -2039,6 +2039,7 @@ GameObject:
   - component: {fileID: 5722607349016230624}
   - component: {fileID: 3237130758562599165}
   - component: {fileID: 154873736591516553}
+  - component: {fileID: 4579543833740270365}
   m_Layer: 6
   m_Name: Enemy_SuperElite_Melee
   m_TagString: Untagged
@@ -2215,6 +2216,23 @@ MonoBehaviour:
   spawnPoint: {fileID: 3416894999387192500}
   telegraphDelay: 0.2
   autoDestroyTime: 0
+--- !u!114 &4579543833740270365
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4819927180509832849}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 247ffacb7dcb5974b9367f394694aed2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  lootContainerPrefab: {fileID: 1302933692980230194, guid: b9592886abbf2c440811e573061cbc30, type: 3}
+  spawnOffset: {x: 0, y: 0, z: 0}
+  lootTable: {fileID: 11400000, guid: 94170dc49088b6f4b83396d9c767cc9d, type: 2}
+  overrideRolls: -1
+  destroyContainerWhenEmpty: 0
 --- !u!1 &4873028029166589635
 GameObject:
   m_ObjectHideFlags: 0

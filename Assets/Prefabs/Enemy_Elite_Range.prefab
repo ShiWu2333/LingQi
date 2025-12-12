@@ -1429,6 +1429,7 @@ GameObject:
   - component: {fileID: 3274170764597456874}
   - component: {fileID: 2805100087615138622}
   - component: {fileID: 5002586033803875718}
+  - component: {fileID: 5547110923154122882}
   m_Layer: 6
   m_Name: Enemy_Elite_Range
   m_TagString: Untagged
@@ -1603,6 +1604,23 @@ MonoBehaviour:
   spawnPoint: {fileID: 7313050521510590536}
   telegraphDelay: 0.2
   autoDestroyTime: 0
+--- !u!114 &5547110923154122882
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5987628566415740090}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 247ffacb7dcb5974b9367f394694aed2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  lootContainerPrefab: {fileID: 1302933692980230194, guid: b9592886abbf2c440811e573061cbc30, type: 3}
+  spawnOffset: {x: 0, y: 0, z: 0}
+  lootTable: {fileID: 11400000, guid: 94170dc49088b6f4b83396d9c767cc9d, type: 2}
+  overrideRolls: -1
+  destroyContainerWhenEmpty: 0
 --- !u!1 &6065982537108144004
 GameObject:
   m_ObjectHideFlags: 0

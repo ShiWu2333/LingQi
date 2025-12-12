@@ -4,64 +4,120 @@ using UnityEngine;
 public interface ILootSource
 {
     bool IsSearched { get; }
-
-    /// <summary>本次搜索需要的时间（秒）。</summary>
     float GetSearchTime();
-
-    /// <summary>仅用于“全部拿走”之类的逻辑，暂时不用。</summary>
     List<ItemStack> TakeAllLoot();
-
-    /// <summary>容器槽位数量。</summary>
     int SlotCount { get; }
-
-    /// <summary>按索引读取一个格子的物品（可能为 null）。</summary>
     ItemStack GetSlotStack(int index);
-
-    /// <summary>按索引写入一个格子的物品（null 表示清空）。</summary>
     void SetSlotStack(int index, ItemStack stack);
 }
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Collider))]
-public class LootContainer : MonoBehaviour, ILootSource
+public class LootContainer : MonoBehaviour, ILootSource, IRunResettable
 {
     [Header("Loot Content")]
     [Tooltip("这就是箱子/尸体里实际存的东西，可以在 Inspector 里直接填。")]
     [SerializeField] private List<ItemStack> loot = new List<ItemStack>();
 
     [Header("Search Settings")]
-    [Tooltip("搜索时间系数：最终时间 = max(baseSearchTime) * multiplier")]
     [SerializeField] private float searchTimeMultiplier = 1.0f;
-
-    [Tooltip("最低搜索时间（避免 0）")]
     [SerializeField] private float minSearchTime = 0.3f;
-
-    [Tooltip("最高搜索时间（保险，不让太夸张）")]
     [SerializeField] private float maxSearchTime = 5.0f;
 
     [Header("Flags")]
-    [Tooltip("是否一旦搜刮就清空内容（true = 一次性容器）")]
     [SerializeField] private bool consumeOnSearch = true;
-
-    [Tooltip("当容器被清空且 consumeOnSearch=true 时，是否销毁这个物体")]
     [SerializeField] private bool destroyWhenEmpty = false;
-
     [SerializeField] private bool isSearched = false;
 
-    public bool IsSearched => isSearched && (loot == null || loot.Count == 0);
+    [Header("Run Reset")]
+    [Tooltip("勾选：该容器是“场景预设容器”，ResetRun 时会恢复到初始状态。\n不勾选：该容器通常是运行时生成（例如尸体箱子），不参与恢复，只会被 RunManager Destroy（需 RegisterRuntimeObject）。")]
+    [SerializeField] private bool participateInRunReset = true;
 
+    // ===== 初始快照（只对 participateInRunReset=true 有意义）=====
+    private List<ItemStack> _initialLootSnapshot;
+    private bool _initialIsSearched;
+
+    public bool IsSearched => isSearched && (loot == null || loot.Count == 0);
     public int SlotCount => loot != null ? loot.Count : 0;
 
     private void Reset()
     {
-        // 默认把 Collider 设置为 Trigger，方便用 Trigger 做交互范围
         var col = GetComponent<Collider>();
         if (col != null)
             col.isTrigger = true;
     }
 
-    // ================= ILootSource：搜索时间 =================
+    private void Awake()
+    {
+        if (participateInRunReset)
+        {
+            CaptureInitialState();
+            RunManager.Instance?.RegisterResettable(this);
+        }
+    }
 
+    private void OnDestroy()
+    {
+        // 防御性：场景卸载/销毁时把自己从列表移除，避免残留引用
+        if (participateInRunReset)
+            RunManager.Instance?.UnregisterResettable(this);
+    }
+
+    private void CaptureInitialState()
+    {
+        _initialLootSnapshot = new List<ItemStack>();
+
+        if (loot != null)
+        {
+            foreach (var s in loot)
+            {
+                if (s == null || s.item == null || s.count <= 0)
+                    _initialLootSnapshot.Add(null);
+                else
+                    _initialLootSnapshot.Add(new ItemStack(s.item, s.count));
+            }
+        }
+
+        _initialIsSearched = isSearched;
+    }
+
+    // ================= IRunResettable =================
+    public void ResetToDefault()
+    {
+        if (!participateInRunReset)
+            return;
+
+        if (loot == null)
+            loot = new List<ItemStack>();
+        else
+            loot.Clear();
+
+        if (_initialLootSnapshot != null)
+        {
+            foreach (var s in _initialLootSnapshot)
+            {
+                if (s == null)
+                    loot.Add(null);
+                else
+                    loot.Add(new ItemStack(s.item, s.count));
+            }
+        }
+
+        isSearched = _initialIsSearched;
+    }
+
+    // ============== 外部配置接口（给 EnemyLootDropper 用） ==============
+    public void SetParticipateInRunReset(bool value)
+    {
+        participateInRunReset = value;
+    }
+
+    public void SetDestroyWhenEmpty(bool value)
+    {
+        destroyWhenEmpty = value;
+    }
+
+    // ================= ILootSource：搜索时间 =================
     public float GetSearchTime()
     {
         if (loot == null || loot.Count == 0)
@@ -88,7 +144,6 @@ public class LootContainer : MonoBehaviour, ILootSource
     }
 
     // ================= ILootSource：按槽位访问 =================
-
     public ItemStack GetSlotStack(int index)
     {
         if (loot == null || index < 0 || index >= loot.Count)
@@ -98,7 +153,6 @@ public class LootContainer : MonoBehaviour, ILootSource
         if (s == null || s.item == null || s.count <= 0)
             return null;
 
-        // 直接返回引用即可，UI 会用 SetSlotStack 写回去覆盖
         return s;
     }
 
@@ -107,7 +161,6 @@ public class LootContainer : MonoBehaviour, ILootSource
         if (loot == null)
             loot = new List<ItemStack>();
 
-        // 保证列表长度够
         while (loot.Count <= index)
             loot.Add(null);
 
@@ -117,16 +170,13 @@ public class LootContainer : MonoBehaviour, ILootSource
         }
         else
         {
-            // 存一份新的，避免外部继续持有引用乱改
             loot[index] = new ItemStack(stack.item, stack.count);
         }
 
-        // 只要还有东西，就认为没彻底搜完
         isSearched = false;
     }
 
-    // ================= ILootSource：全部拿走（暂时只留接口） =================
-
+    // ================= ILootSource：全部拿走 =================
     public List<ItemStack> TakeAllLoot()
     {
         var result = new List<ItemStack>();
@@ -154,8 +204,7 @@ public class LootContainer : MonoBehaviour, ILootSource
         return result;
     }
 
-    // ============== 辅助接口（比如敌人死亡时填战利品） ==============
-
+    // ============== 辅助接口（敌人死亡时填战利品） ==============
     public void SetLoot(List<ItemStack> newLoot)
     {
         if (loot == null)

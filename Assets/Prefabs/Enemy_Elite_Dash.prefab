@@ -512,6 +512,7 @@ GameObject:
   - component: {fileID: 1590655351009445796}
   - component: {fileID: 8905547083227483631}
   - component: {fileID: 8499059918147765194}
+  - component: {fileID: 154605224668441849}
   m_Layer: 6
   m_Name: Enemy_Elite_Dash
   m_TagString: Untagged
@@ -689,6 +690,23 @@ MonoBehaviour:
   spawnPoint: {fileID: 3409129590026562133}
   telegraphDelay: 0.2
   autoDestroyTime: 0
+--- !u!114 &154605224668441849
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1705301833513496317}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 247ffacb7dcb5974b9367f394694aed2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  lootContainerPrefab: {fileID: 1302933692980230194, guid: b9592886abbf2c440811e573061cbc30, type: 3}
+  spawnOffset: {x: 0, y: 0, z: 0}
+  lootTable: {fileID: 11400000, guid: 94170dc49088b6f4b83396d9c767cc9d, type: 2}
+  overrideRolls: -1
+  destroyContainerWhenEmpty: 0
 --- !u!1 &1731670591911903720
 GameObject:
   m_ObjectHideFlags: 0

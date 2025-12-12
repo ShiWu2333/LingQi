@@ -1,4 +1,5 @@
 ﻿using System;
+using Unity.Mathematics;
 using UnityEngine;
 
 [DisallowMultipleComponent]
@@ -179,6 +180,15 @@ public class PlayerResources : MonoBehaviour
         OnDeath?.Invoke();
         // 复活逻辑之后再加
     }
+
+    public void ResetToFull()
+    {
+        currentHP = stats.maxHP;
+        currentStamina = stats.maxStamina;
+        currentMana = stats.maxMana;
+        staminaRegenDelayTimer = 0f;
+    }
+
 
     // ================== Stamina 操作 ==================
 

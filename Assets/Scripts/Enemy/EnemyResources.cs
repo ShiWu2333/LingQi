@@ -110,4 +110,21 @@ public class EnemyResources : MonoBehaviour
 
         gameObject.SetActive(false);
     }
+
+    public void ResetToFull()
+    {
+        if (stats == null)
+            return;
+
+        _isDead = false;
+        currentHP = stats.maxHP;
+
+        // 重新启用 GameObject（你现在死亡时 SetActive(false) 了）
+        if (!gameObject.activeSelf)
+            gameObject.SetActive(true);
+
+        // 通知 UI / 监听者
+        OnHPChanged?.Invoke(currentHP, MaxHP);
+    }
+
 }

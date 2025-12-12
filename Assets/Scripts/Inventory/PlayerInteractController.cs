@@ -6,19 +6,20 @@ public class PlayerInteractController : MonoBehaviour
 {
     [Header("Refs")]
     [SerializeField] private float interactDistance = 3f;
-    [SerializeField] private LayerMask interactLayers = ~0;
+    [SerializeField] private LayerMask interactLayers = ~0;  // 只检测 LootContainer 的层
 
     [Header("UI")]
-    [SerializeField] private InventoryUI inventoryUI;
-    [SerializeField] private LootContainerUI lootContainerUI;
+    [SerializeField] private InventoryUI inventoryUI;         // 玩家背包 UI
+    [SerializeField] private InventoryUI campStorageUI;       // 营地仓库 UI（也是一个 InventoryUI）
+    [SerializeField] private LootContainerUI lootContainerUI; // 物资箱 / 尸体 UI
 
     [Header("Input")]
     [SerializeField] private KeyCode inventoryKey = KeyCode.B;
     [SerializeField] private KeyCode interactKey = KeyCode.F;
 
     [Header("Search")]
-    [SerializeField] private bool useHoldToSearch = true;
-    [SerializeField] private float minSearchHold = 0.1f;
+    [SerializeField] private bool useHoldToSearch = true;   // true = 按住 F 完成搜索
+    [SerializeField] private float minSearchHold = 0.1f;    // 防止误触
 
     [Header("Debug")]
     [SerializeField] private bool debugDrawRay = false;
@@ -27,75 +28,61 @@ public class PlayerInteractController : MonoBehaviour
     private ILootSource _currentFocus;
     private Coroutine _searchRoutine;
     private bool _isSearching;
-    private float _searchProgress;
+    private float _searchProgress; // 0~1，之后可以暴露给进度条 UI
+
+    // 营地状态
+    [SerializeField] private bool _isInCamp = false;
 
     public float SearchProgress => _searchProgress;
     public bool IsSearching => _isSearching;
     public ILootSource CurrentFocus => _currentFocus;
 
+    /// <summary>给营地区域触发器调用，设置玩家是否在营地。</summary>
+    public void SetInCamp(bool value)
+    {
+        _isInCamp = value;
+    }
+
     private void Update()
     {
         HandleInventoryToggle();
-        HandleEscapeClose();
         UpdateFocus();
         HandleInteract();
-        HandleClosePanels();   // 新增
+        HandleCloseLootContainer();
     }
 
-    // ========= 背包开关 =========
-
-    private void HandleClosePanels()
-    {
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            bool anyClosed = false;
-
-            if (lootContainerUI != null && lootContainerUI.IsVisible)
-            {
-                lootContainerUI.Hide();
-                anyClosed = true;
-            }
-
-            // 如果打开箱子时你总是同时打开背包，这里也顺手关掉
-            if (inventoryUI != null && inventoryUI.IsVisible && anyClosed)
-            {
-                inventoryUI.Hide();
-            }
-        }
-    }
+    // ================== 背包 / 仓库 开关 ==================
 
     private void HandleInventoryToggle()
     {
-        if (Input.GetKeyDown(inventoryKey))
-        {
-            if (inventoryUI != null)
-                inventoryUI.Toggle();
-        }
-    }
-
-    // ========= Esc 关闭 LootContainer + 背包 =========
-
-    private void HandleEscapeClose()
-    {
-        if (!Input.GetKeyDown(KeyCode.Escape))
+        if (!Input.GetKeyDown(inventoryKey))
             return;
 
-        bool anyClosed = false;
+        // 当前想要的最终状态：反转玩家背包当前状态
+        bool newVisible = !(inventoryUI != null && inventoryUI.IsVisible);
 
-        if (lootContainerUI != null && lootContainerUI.IsVisible)
+        // 玩家背包
+        if (inventoryUI != null)
         {
-            lootContainerUI.Hide();
-            anyClosed = true;
+            if (newVisible) inventoryUI.Show();
+            else inventoryUI.Hide();
         }
 
-        if (inventoryUI != null && inventoryUI.IsVisible && anyClosed)
+        // 在营地才联动仓库
+        if (campStorageUI != null && _isInCamp)
         {
-            // 如果本来就是为搜箱子打开的背包，一起关掉
-            inventoryUI.Hide();
+            if (newVisible) campStorageUI.Show();
+            else campStorageUI.Hide();
+        }
+        else
+        {
+            // 不在营地，确保仓库是关着的
+            if (campStorageUI != null && campStorageUI.IsVisible)
+                campStorageUI.Hide();
         }
     }
 
-    // ========= 交互目标检测 =========
+    // ================== 交互目标检测 ==================
 
     private void UpdateFocus()
     {
@@ -104,10 +91,10 @@ public class PlayerInteractController : MonoBehaviour
 
         Vector3 origin = transform.position + Vector3.up * 1.0f;
         Vector3 dir = transform.forward;
+
         Ray ray = new Ray(origin, dir);
 
-        if (Physics.Raycast(ray, out var hit, interactDistance, interactLayers,
-                QueryTriggerInteraction.Collide))
+        if (Physics.Raycast(ray, out var hit, interactDistance, interactLayers, QueryTriggerInteraction.Collide))
         {
             var loot = hit.collider.GetComponentInParent<ILootSource>();
             if (loot != null)
@@ -124,7 +111,7 @@ public class PlayerInteractController : MonoBehaviour
         }
     }
 
-    // ========= F 键：搜索 / 打开容器 =========
+    // ================== F 键：搜索 / 打开容器 ==================
 
     private void HandleInteract()
     {
@@ -136,6 +123,7 @@ public class PlayerInteractController : MonoBehaviour
 
         if (useHoldToSearch)
         {
+            // 长按模式：按下开始，松开中断
             if (Input.GetKeyDown(interactKey))
             {
                 _searchRoutine = StartCoroutine(CoSearchAndOpen(_currentFocus));
@@ -154,10 +142,11 @@ public class PlayerInteractController : MonoBehaviour
         }
         else
         {
+            // 单击模式：直接完成搜索并打开
             if (Input.GetKeyDown(interactKey))
             {
                 if (_searchRoutine == null)
-                    _searchRoutine = StartCoroutine(CoSearchAndOpen(_currentFocus, true));
+                    _searchRoutine = StartCoroutine(CoSearchAndOpen(_currentFocus, ignoreHold: true));
             }
         }
     }
@@ -177,6 +166,7 @@ public class PlayerInteractController : MonoBehaviour
         {
             float dt = Time.deltaTime;
 
+            // 若是长按模式且松开了键，则取消
             if (!ignoreHold && !Input.GetKey(interactKey) && t > minSearchHold)
             {
                 _isSearching = false;
@@ -199,7 +189,30 @@ public class PlayerInteractController : MonoBehaviour
         if (inventoryUI != null && !inventoryUI.IsVisible)
             inventoryUI.Show();
 
+        if (campStorageUI != null && _isInCamp && !campStorageUI.IsVisible)
+            campStorageUI.Show();
+
         if (lootContainerUI != null)
             lootContainerUI.Show(source);
+    }
+
+    // ================== ESC / F 关闭 LootContainer ==================
+
+    private void HandleCloseLootContainer()
+    {
+        if (lootContainerUI == null || !lootContainerUI.IsVisible)
+            return;
+
+        if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(interactKey))
+        {
+            lootContainerUI.Hide();
+
+            // 这里根据你喜好：搜刮结束时顺便关掉背包
+            if (inventoryUI != null && inventoryUI.IsVisible)
+                inventoryUI.Hide();
+
+            if (campStorageUI != null && campStorageUI.IsVisible && _isInCamp)
+                campStorageUI.Hide();
+        }
     }
 }
