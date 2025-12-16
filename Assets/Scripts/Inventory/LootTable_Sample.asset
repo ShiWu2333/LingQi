@@ -14,4 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rolls: 2
   uniqueItems: 1
-  entries: []
+  entries:
+  - item: {fileID: 11400000, guid: acec86d895c35d847a2cfd1760e7dafd, type: 2}
+    weight: 7
+    minCount: 1
+    maxCount: 100
+  - item: {fileID: 11400000, guid: f3e04ae815c389d4f8fc68bef6bdcb69, type: 2}
+    weight: 3
+    minCount: 1
+    maxCount: 5
+  - item: {fileID: 11400000, guid: 78bcaf0e9e100db4c9875a4f274573c0, type: 2}
+    weight: 0.1
+    minCount: 1
+    maxCount: 1

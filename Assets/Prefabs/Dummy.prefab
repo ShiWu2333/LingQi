@@ -738,15 +738,13 @@ MonoBehaviour:
   playerLayer:
     serializedVersion: 2
     m_Bits: 128
-  hitboxRadius: 1
-  hitboxHeightOffset: 1
+  combatBalanceConfig: {fileID: 11400000, guid: 1062630389602db4882cec3db915dd4a, type: 2}
   debugDrawHitbox: 1
-  lightStaggerTime: 0.1
-  mediumStaggerTime: 0.35
-  heavyStaggerTime: 0.6
+  projectileSpawnPoint: {fileID: 0}
   state: 0
   stateTimer: 0
-  _telegraph: {fileID: 0}
+  timeInAttackZone: 0
+  _telegraph: {fileID: 211506182840595147}
 --- !u!114 &272390697275154834
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -774,9 +772,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ea6cd444704a9264e821762f48375293, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  stats: {fileID: 11400000, guid: 758918e64b0ed9d46bc1bb63a897abf4, type: 2}
+  stats: {fileID: 11400000, guid: 24dc5ff3d5df4014ab27ca470b4a63b5, type: 2}
   currentHP: 0
-  spiritReward: 5
 --- !u!114 &7018046086069667645
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -789,6 +786,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ef9af330376c6543982ea9663702e9c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  modelRoot: {fileID: 0}
   maxBackwardAngle: 30
   maxSideAngle: 30
   recoilInDuration: 0.075
