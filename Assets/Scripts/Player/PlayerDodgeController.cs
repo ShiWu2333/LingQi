@@ -154,6 +154,9 @@ public class PlayerDodgeController : MonoBehaviour
         {
             combat.EndAttack();
         }
+        // 如果正在蓄力，先取消蓄力
+        if (combat != null && combat.IsHeavyCharging)
+            combat.CancelHeavyCharge();
 
         // 确定闪避方向：优先输入方向，否则面向方向
         Vector3 dir = GetInputDirection();
@@ -177,6 +180,11 @@ public class PlayerDodgeController : MonoBehaviour
         }
 
         // 🔴 新增：广播开始闪避事件
+        if (movement != null)
+        {
+            movement.isMovementLocked = true;
+            movement.LockFacingToDirection(lastDodgeDirection);
+        }
         OnDodgeStarted?.Invoke();
     }
 
@@ -235,6 +243,11 @@ public class PlayerDodgeController : MonoBehaviour
         }
         postDodgeTimer = dashAttackWindow;
         // 🔴 新增：广播结束闪避事件
+        if (movement != null)
+        {
+            movement.isMovementLocked = false;
+            movement.UnlockFacing();
+        }
         OnDodgeEnded?.Invoke();
     }
 

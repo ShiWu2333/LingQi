@@ -57,6 +57,21 @@ public class PlayerCombatController : MonoBehaviour, IAttackSource
 
     public event Action<AttackData> OnAttackStarted;
     public event Action<AttackData> OnAttackEnded;
+    public event Action OnHeavyChargeStarted;
+    public event Action<float> OnHeavyChargeUpdated;   // 0~1
+    public event Action<float> OnHeavyChargeCanceled;  // 0~1
+    public event Action<float> OnHeavyChargeReleased;  // 0~1
+
+    [Header("Heavy Charge")]
+    [SerializeField] private float heavyChargeTimeToFull = 0.75f; // 蓄满时间
+    [SerializeField] private float heavyChargeMinToRelease = 0.05f; // 防止点一下也算“蓄力”
+    [SerializeField] private bool lockMovementWhileCharging = false;
+
+    [SerializeField] private bool isHeavyCharging;
+    [SerializeField] private float heavyChargeTimer;
+    public bool IsHeavyCharging => isHeavyCharging;
+    public float HeavyCharge01 => Mathf.Clamp01(heavyChargeTimeToFull <= 0f ? 1f : heavyChargeTimer / heavyChargeTimeToFull);
+    private float cachedMoveMulBeforeCharge = 1f;
 
     private PlayerResources resources;
     private PlayerMovement movement;
@@ -126,46 +141,129 @@ public class PlayerCombatController : MonoBehaviour, IAttackSource
         if (weaponConfig == null || resources == null)
             return;
 
-        // -------- 轻攻击 --------
+        // 轻攻击（保持你原样）
         if (Input.GetKeyDown(lightKey))
         {
             attackBuffered = true;
             lastAttackBufferedTime = Time.time;
 
-            if (currentState == AttackState.Idle)
+            if (currentState == AttackState.Idle && !isHeavyCharging)
             {
                 AttackData attackToUse = null;
 
                 bool hasDashAttack = (weaponConfig.dashAttack != null && dodge != null);
-
                 if (hasDashAttack)
                 {
-                    if (dodge.IsDodging)
-                    {
-                        dashAttackQueued = true;
-                        return;
-                    }
-
-                    if (dodge.IsInDashAttackWindow)
-                        attackToUse = weaponConfig.dashAttack;
+                    if (dodge.IsDodging) { dashAttackQueued = true; return; }
+                    if (dodge.IsInDashAttackWindow) attackToUse = weaponConfig.dashAttack;
                 }
 
-                if (attackToUse == null)
-                    attackToUse = weaponConfig.lightAttack;
+                if (attackToUse == null) attackToUse = weaponConfig.lightAttack;
 
                 TryStartAttack(attackToUse);
                 attackBuffered = false;
             }
         }
-        // -------- 重攻击 --------
-        else if (Input.GetKeyDown(heavyKey))
+
+        // 右键：开始蓄力
+        if (Input.GetKeyDown(heavyKey))
         {
-            if (currentState == AttackState.Idle)
+            if (currentState == AttackState.Idle && !isHeavyCharging)
             {
-                TryStartAttack(weaponConfig.heavyAttack);
+                BeginHeavyCharge();
+            }
+        }
+
+        // 右键按住：更新蓄力
+        if (Input.GetKey(heavyKey))
+        {
+            if (isHeavyCharging)
+            {
+                TickHeavyCharge(Time.deltaTime);
+            }
+        }
+
+        // 右键松开：释放重击
+        if (Input.GetKeyUp(heavyKey))
+        {
+            if (isHeavyCharging)
+            {
+                ReleaseHeavyCharge();
             }
         }
     }
+    private void BeginHeavyCharge()
+    {
+        isHeavyCharging = true;
+        heavyChargeTimer = 0f;
+
+        if (movement != null)
+        {
+            cachedMoveMulBeforeCharge = movement.moveSpeedMultiplier;
+
+            // 用 heavyAttack 的某个倍率作为“蓄力减速”
+            // 你提到想用 AttackData 的 MoveMultiplier：这里就直接取 heavyAttack.moveMultiplierStartup（或你认为更合适的那个）
+            if (weaponConfig != null && weaponConfig.heavyAttack != null)
+                movement.moveSpeedMultiplier = weaponConfig.heavyAttack.moveMultiplierStartup;
+        }
+
+        if (lockMovementWhileCharging && movement != null)
+            movement.isMovementLocked = true;
+
+        OnHeavyChargeStarted?.Invoke();
+        OnHeavyChargeUpdated?.Invoke(0f);
+    }
+
+    private void TickHeavyCharge(float dt)
+    {
+        heavyChargeTimer += dt;
+        OnHeavyChargeUpdated?.Invoke(HeavyCharge01);
+    }
+
+    public void CancelHeavyCharge()
+    {
+        if (!isHeavyCharging) return;
+
+        float c01 = HeavyCharge01;
+
+        isHeavyCharging = false;
+        heavyChargeTimer = 0f;
+
+        if (lockMovementWhileCharging && movement != null)
+            movement.isMovementLocked = false;
+
+        if (movement != null)
+            movement.moveSpeedMultiplier = cachedMoveMulBeforeCharge;
+
+
+        OnHeavyChargeCanceled?.Invoke(c01);
+    }
+
+    private void ReleaseHeavyCharge()
+    {
+        float c01 = HeavyCharge01;
+
+        isHeavyCharging = false;
+        heavyChargeTimer = 0f;
+
+        if (lockMovementWhileCharging && movement != null)
+            movement.isMovementLocked = false;
+
+        if (movement != null)
+            movement.moveSpeedMultiplier = cachedMoveMulBeforeCharge;
+
+        OnHeavyChargeReleased?.Invoke(c01);
+
+        // 太短的按键当作取消（避免误触）
+        if (c01 < (heavyChargeMinToRelease <= 0f ? 0f : heavyChargeMinToRelease / Mathf.Max(0.0001f, heavyChargeTimeToFull)))
+            return;
+
+        // 释放时真正执行“重击 AttackData”
+        if (currentState == AttackState.Idle)
+            TryStartAttack(weaponConfig.heavyAttack);
+
+    }
+
     // =========================================================
     //  Weapon Switching (prototype: 1/2/3)
     // =========================================================

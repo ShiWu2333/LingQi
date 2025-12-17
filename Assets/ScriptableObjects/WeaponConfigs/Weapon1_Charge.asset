@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 23b7e4405d614c4418e30b97f39c9b4b, type: 3}
-  m_Name: Weapon1_Heavy
+  m_Name: Weapon1_Charge
   m_EditorClassIdentifier: 
-  attackId: heavy_1
+  attackId: Weapon1_Charge
   hitboxShape: 2
   hitboxLocalOffset: {x: 0, y: 1, z: 2.87}
   hitboxRadius: 3.81
@@ -44,8 +44,8 @@ MonoBehaviour:
   nextCombo: {fileID: 0}
   comboInputOpenTime: 0
   comboInputCloseTime: 0
-  animationClip: {fileID: 7400000, guid: 1cf48b573d2926e47b44bdc98086880c, type: 2}
-  animatorStateName: HeavyAttack
+  animationClip: {fileID: 7400000, guid: 1f8988b9cedb81c41ab2ac37a9756acf, type: 2}
+  animatorStateName: Attack_Charge
   swordMotion:
     startAngle: -210
     endAngle: 0

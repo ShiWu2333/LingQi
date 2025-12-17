@@ -44,8 +44,8 @@ MonoBehaviour:
   nextCombo: {fileID: 11400000, guid: 29e37d4f66733e64297554645f9a5ad1, type: 2}
   comboInputOpenTime: 0.3
   comboInputCloseTime: 0.65
-  animationClip: {fileID: 7400000, guid: 7955a24b57357004ca47200c7aaeb73d, type: 2}
-  animatorStateName: LightAttack
+  animationClip: {fileID: 7400000, guid: 62c6a98c929c5584381fdd5b041efb5c, type: 2}
+  animatorStateName: Attack_Light1
   swordMotion:
     startAngle: -180
     endAngle: 0

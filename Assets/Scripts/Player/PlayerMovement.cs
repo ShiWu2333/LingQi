@@ -25,6 +25,7 @@ public class PlayerMovement : MonoBehaviour
     private PlayerResources resources;
     private float verticalVelocity;
     private bool isMoving;
+    public Vector3 LastMoveDirection { get; private set; }
 
     [HideInInspector] public float moveSpeedMultiplier = 1f; // 外部控制移速
     [HideInInspector] public bool isMovementLocked = false;  // 闪避等锁移动
@@ -94,13 +95,18 @@ public class PlayerMovement : MonoBehaviour
 
         if (isMovementLocked)
         {
-            // 移动被锁（比如闪避），但朝向是否锁定由 isFacingLocked / 锁定系统决定
             if (isFacingLocked)
+            {
                 transform.rotation = lockedRotation;
+            }
             else if (lockOnTarget != null)
+            {
                 RotateTowardsWorldPosition(lockOnTarget.position);
+            }
+
             return;
         }
+
 
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
@@ -109,6 +115,11 @@ public class PlayerMovement : MonoBehaviour
         Vector3 moveDir = inputDirection.sqrMagnitude > 1f
             ? inputDirection.normalized
             : inputDirection;
+
+        if (moveDir.sqrMagnitude > 0.0001f)
+        {
+            LastMoveDirection = moveDir.normalized;
+        }
 
         HandleDebugLogging(moveDir);
 
@@ -340,11 +351,21 @@ public class PlayerMovement : MonoBehaviour
         lockedRotation = transform.rotation;
     }
 
+    public void LockFacingToDirection(Vector3 worldDir)
+    {
+        worldDir.y = 0f;
+        if (worldDir.sqrMagnitude < 0.0001f)
+            return;
+
+        isFacingLocked = true;
+        lockedRotation = Quaternion.LookRotation(worldDir.normalized, Vector3.up);
+    }
     /// <summary>攻击结束时解除朝向锁定。</summary>
     public void UnlockFacing()
     {
         isFacingLocked = false;
     }
+
 
     /// <summary>
     /// 给 Combat / Projectile 用的统一“瞄准方向”。

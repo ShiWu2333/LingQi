@@ -5521,7 +5521,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 323277342}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0792f405161c8b84db804e3c0b64450d, type: 3}
   m_Name: 
@@ -33962,6 +33962,65 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3558464503559140576, guid: 6a8a6a8c5c6a4bbd9a2f9d29e4e92a7f, type: 3}
   m_PrefabInstance: {fileID: 1946120302339346343}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1893503459 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 21514088681834414, guid: 6a8a6a8c5c6a4bbd9a2f9d29e4e92a7f, type: 3}
+  m_PrefabInstance: {fileID: 1946120302339346343}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1893503416}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fda3ba951f4960c428e20872e26d8464, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1893503463 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2472380632183366002, guid: 6a8a6a8c5c6a4bbd9a2f9d29e4e92a7f, type: 3}
+  m_PrefabInstance: {fileID: 1946120302339346343}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1893503416}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bf5f5528a48c7ff43a849b6a0a42c00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1893503464 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3105068024124584757, guid: 6a8a6a8c5c6a4bbd9a2f9d29e4e92a7f, type: 3}
+  m_PrefabInstance: {fileID: 1946120302339346343}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1893503416}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ef777bb95bf29d439b84243aa39ab54, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1893503466
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1893503416}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 357b73ff3dbcc904fbbe6bf4a33ee643, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  movement: {fileID: 1893503464}
+  combat: {fileID: 1893503459}
+  dodge: {fileID: 1893503463}
+  resources: {fileID: 1893503454}
+  animator: {fileID: 323277345}
+  locomotionStateName: Locomotion
+  rollStateName: Roll
+  hitReactStateName: HitReact
+  chargeStartStateName: ChargeStart
+  chargeLoopStateName: ChargeLoop
+  locomotionCrossFade: 0.1
+  attackCrossFade: 0.05
+  rollCrossFade: 0.05
+  hitCrossFade: 0.03
 --- !u!1001 &1895658129
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -38568,6 +38627,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5848924717800219419, guid: 6a8a6a8c5c6a4bbd9a2f9d29e4e92a7f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1893503449}
+    - targetCorrespondingSourceObject: {fileID: 5848924717800219419, guid: 6a8a6a8c5c6a4bbd9a2f9d29e4e92a7f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1893503466}
   m_SourcePrefab: {fileID: 100100000, guid: 6a8a6a8c5c6a4bbd9a2f9d29e4e92a7f, type: 3}
 --- !u!1001 &5543503905319570050
 PrefabInstance:

@@ -13,17 +13,24 @@ public class PlayerAnimatorBridge : MonoBehaviour
     // Animator 参数 Hash
     private static readonly int HashMoveSpeed = Animator.StringToHash("MoveSpeed");
     private static readonly int HashAttackSpeed = Animator.StringToHash("AttackSpeed");
+    private static readonly int HashIsCharging = Animator.StringToHash("IsCharging");
+    private static readonly int HashCharge01 = Animator.StringToHash("Charge01");
 
     [Header("State Names")]
     [SerializeField] private string locomotionStateName = "Locomotion";
     [SerializeField] private string rollStateName = "Roll";      // 和 Animator 里状态名一致
     [SerializeField] private string hitReactStateName = "HitReact";  // 同上
-
+    [Header("Charge State Names")]
+    [SerializeField] private string chargeStartStateName = "ChargeStart";
+    [SerializeField] private string chargeLoopStateName = "ChargeLoop";
     [Header("Cross Fade Times")]
     [SerializeField] private float locomotionCrossFade = 0.1f;
     [SerializeField] private float attackCrossFade = 0.05f;
     [SerializeField] private float rollCrossFade = 0.05f;
     [SerializeField] private float hitCrossFade = 0.03f;
+    [SerializeField] private float moveDirDamp = 0.10f; // 0.08~0.15 都行
+    [SerializeField] private float moveSpeedDamp = 0.06f; // 0.04~0.10
+    [SerializeField] private float moveSpeedMax = 5f;     // 你的最大移动速度，用来归一化
 
     // ------------ 自动抓引用 ------------
     private void Reset()
@@ -51,6 +58,11 @@ public class PlayerAnimatorBridge : MonoBehaviour
         {
             combat.OnAttackStarted += HandleAttackStarted;
             combat.OnAttackEnded += HandleAttackEnded;
+
+            combat.OnHeavyChargeStarted += HandleHeavyChargeStarted;
+            combat.OnHeavyChargeUpdated += HandleHeavyChargeUpdated;
+            combat.OnHeavyChargeCanceled += HandleHeavyChargeCanceled;
+            combat.OnHeavyChargeReleased += HandleHeavyChargeReleased;
         }
 
         if (dodge != null)
@@ -71,6 +83,11 @@ public class PlayerAnimatorBridge : MonoBehaviour
         {
             combat.OnAttackStarted -= HandleAttackStarted;
             combat.OnAttackEnded -= HandleAttackEnded;
+
+            combat.OnHeavyChargeStarted -= HandleHeavyChargeStarted;
+            combat.OnHeavyChargeUpdated -= HandleHeavyChargeUpdated;
+            combat.OnHeavyChargeCanceled -= HandleHeavyChargeCanceled;
+            combat.OnHeavyChargeReleased -= HandleHeavyChargeReleased;
         }
 
         if (dodge != null)
@@ -85,14 +102,33 @@ public class PlayerAnimatorBridge : MonoBehaviour
         }
     }
 
+
     // ------------ 移动动画 ------------
     private void Update()
     {
         if (movement == null || animator == null) return;
 
-        float speed = movement.CurrentPlanarSpeed;
-        animator.SetFloat(HashMoveSpeed, speed);
+        if (movement.isMovementLocked)
+        {
+            animator.SetFloat("MoveX", 0f, moveDirDamp, Time.deltaTime);
+            animator.SetFloat("MoveY", 0f, moveDirDamp, Time.deltaTime);
+
+            animator.SetFloat(HashMoveSpeed, 0f, moveSpeedDamp, Time.deltaTime);
+            return;
+        }
+
+        // 1) 更新方向参数（MoveX/MoveY）
+        UpdateMoveDirection();
+
+        // 2) 更新速度参数（MoveSpeed 归一化 + 平滑）
+        float speed01 = 0f;
+        if (moveSpeedMax > 0.0001f)
+            speed01 = Mathf.Clamp01(movement.CurrentPlanarSpeed / moveSpeedMax);
+
+        animator.SetFloat(HashMoveSpeed, speed01, moveSpeedDamp, Time.deltaTime);
     }
+
+
 
     // ------------ 攻击动画（数据驱动） ------------
     private void HandleAttackStarted(AttackData data)
@@ -137,7 +173,7 @@ public class PlayerAnimatorBridge : MonoBehaviour
     private void HandleDodgeEnded()
     {
         if (animator == null) return;
-
+        animator.CrossFadeInFixedTime(locomotionStateName, locomotionCrossFade);
     }
 
     // ------------ 受击动画（事件驱动） ------------
@@ -148,4 +184,71 @@ public class PlayerAnimatorBridge : MonoBehaviour
         // 简单版：只要受到伤害就播受击
         animator.CrossFadeInFixedTime(hitReactStateName, hitCrossFade);
     }
+
+    private void HandleHeavyChargeStarted()
+    {
+        if (animator == null) return;
+
+        animator.SetBool(HashIsCharging, true);
+        animator.SetFloat(HashCharge01, 0f);
+
+        // 先播一次 start（可在 Animator 里用 Exit Time 自动进 loop）
+        if (!string.IsNullOrEmpty(chargeStartStateName))
+            animator.CrossFadeInFixedTime(chargeStartStateName, 0.05f);
+        else if (!string.IsNullOrEmpty(chargeLoopStateName))
+            animator.CrossFadeInFixedTime(chargeLoopStateName, 0.05f);
+    }
+
+    private void HandleHeavyChargeUpdated(float c01)
+    {
+        if (animator == null) return;
+        animator.SetFloat(HashCharge01, c01);
+    }
+
+    private void HandleHeavyChargeCanceled(float c01)
+    {
+        if (animator == null) return;
+
+        animator.SetBool(HashIsCharging, false);
+        animator.SetFloat(HashCharge01, c01);
+
+        // 回 locomotion（如果你想更硬一点）
+        animator.CrossFadeInFixedTime(locomotionStateName, locomotionCrossFade);
+    }
+
+    private void HandleHeavyChargeReleased(float c01)
+    {
+        if (animator == null) return;
+
+        animator.SetBool(HashIsCharging, false);
+        animator.SetFloat(HashCharge01, c01);
+
+        // 不在这里播重击动画：重击动画由 OnAttackStarted(heavyAttack) 接管
+    }
+
+    private void UpdateMoveDirection()
+    {
+        // 如果几乎没动，直接归零（避免漂移）
+        if (movement.CurrentPlanarSpeed < 0.05f)
+        {
+            animator.SetFloat("MoveX", 0f, moveDirDamp, Time.deltaTime);
+            animator.SetFloat("MoveY", 0f, moveDirDamp, Time.deltaTime);
+            return;
+        }
+
+        Vector3 worldMove = movement.LastMoveDirection; // 世界空间
+        worldMove.y = 0f;
+        if (worldMove.sqrMagnitude < 0.0001f)
+        {
+            animator.SetFloat("MoveX", 0f, moveDirDamp, Time.deltaTime);
+            animator.SetFloat("MoveY", 0f, moveDirDamp, Time.deltaTime);
+            return;
+        }
+
+        Vector3 local = transform.InverseTransformDirection(worldMove.normalized);
+
+        animator.SetFloat("MoveX", Mathf.Clamp(local.x, -1f, 1f), moveDirDamp, Time.deltaTime);
+        animator.SetFloat("MoveY", Mathf.Clamp(local.z, -1f, 1f), moveDirDamp, Time.deltaTime);
+    }
+
 }
