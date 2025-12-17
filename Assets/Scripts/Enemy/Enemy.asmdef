@@ -2,7 +2,8 @@
     "name": "Enemy",
     "rootNamespace": "",
     "references": [
-        "GUID:4ad0ae040fbb411aabdd1806147e9a36"
+        "GUID:4ad0ae040fbb411aabdd1806147e9a36",
+        "GUID:ba8398e8da304fad89c9f098bc5e4cdb"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
