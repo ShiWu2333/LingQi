@@ -30,12 +30,12 @@ MonoBehaviour:
   damage: 10
   physicalCoef: 1
   magicCoef: 0
-  moveMultiplierStartup: 0.5
-  moveMultiplierActive: 0.3
-  moveMultiplierRecovery: 0.3
-  stepForward: 0
-  stepDistance: 0.5
-  stepDuration: 0.1
+  moveMultiplierStartup: 0
+  moveMultiplierActive: 0
+  moveMultiplierRecovery: 0
+  stepForward: 1
+  stepDistance: 1
+  stepDuration: 0.2
   cancelableAfter: 0.1
   poiseDamage: 5
   impact: 1
@@ -45,7 +45,7 @@ MonoBehaviour:
   comboInputOpenTime: 0.3
   comboInputCloseTime: 0.65
   animationClip: {fileID: 7400000, guid: 62c6a98c929c5584381fdd5b041efb5c, type: 2}
-  animatorStateName: Attack_Light1
+  animatorStateName: Attack_Light2
   swordMotion:
     startAngle: -180
     endAngle: 0

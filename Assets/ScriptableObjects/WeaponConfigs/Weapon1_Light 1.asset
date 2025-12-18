@@ -30,12 +30,12 @@ MonoBehaviour:
   damage: 10
   physicalCoef: 1
   magicCoef: 0
-  moveMultiplierStartup: 0.5
-  moveMultiplierActive: 0.3
-  moveMultiplierRecovery: 0.3
-  stepForward: 0
-  stepDistance: 0.5
-  stepDuration: 0.1
+  moveMultiplierStartup: 0
+  moveMultiplierActive: 0
+  moveMultiplierRecovery: 0
+  stepForward: 1
+  stepDistance: 1
+  stepDuration: 0.2
   cancelableAfter: 0.1
   poiseDamage: 5
   impact: 1

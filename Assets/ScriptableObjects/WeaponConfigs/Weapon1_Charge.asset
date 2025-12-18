@@ -20,22 +20,22 @@ MonoBehaviour:
   hitboxCapsuleRadius: 2.35
   hitboxCapsuleHeight: 4.64
   hitboxCapsuleDirection: {x: 1, y: 0, z: 0}
-  startup: 0.55
-  active: 0.15
+  startup: 0.1
+  active: 0.1
   recovery: 0.55
-  hitStartTime: 0.6
-  hitEndTime: 0.65
+  hitStartTime: 0.05
+  hitEndTime: 0.15
   staminaCost: 30
   manaCost: 10
   damage: 20
   physicalCoef: 1
   magicCoef: 1
-  moveMultiplierStartup: 0
+  moveMultiplierStartup: 0.15
   moveMultiplierActive: 0
   moveMultiplierRecovery: 0
   stepForward: 1
-  stepDistance: 0.5
-  stepDuration: 0.12
+  stepDistance: 3.5
+  stepDuration: 0.1
   cancelableAfter: 0.1
   poiseDamage: 20
   impact: 1
@@ -47,31 +47,31 @@ MonoBehaviour:
   animationClip: {fileID: 7400000, guid: 1f8988b9cedb81c41ab2ac37a9756acf, type: 2}
   animatorStateName: Attack_Charge
   swordMotion:
-    startAngle: -210
-    endAngle: 0
-    radius: 1.1
+    startAngle: 60
+    endAngle: 90
+    radius: 1
     idleAngle: 0
-    idleRadius: 0.8
-    anticipationOffset: -30
-    overshootOffset: 30
+    idleRadius: 1
+    anticipationOffset: 0
+    overshootOffset: 0
     startPitch: 0
     endPitch: 0
     idlePitch: 0
     anticipationPitchOffset: 0
     overshootPitchOffset: 0
     startRoll: 0
-    endRoll: 0
+    endRoll: 180
     idleRoll: 0
-    anticipationRollOffset: 0
-    overshootRollOffset: 0
-  slashVFXPrefab: {fileID: 8587560481101609250, guid: 2204f06b178af014986bf95a7bda8e6e, type: 3}
-  splashVFXPrefab: {fileID: 4580678310858329431, guid: 617d250a42c20444c9a4c95b32c2f807, type: 3}
+    anticipationRollOffset: -20
+    overshootRollOffset: -20
+  slashVFXPrefab: {fileID: 26357312617216343, guid: 43a6fff530ea41e47b72e332549cc9d2, type: 3}
+  splashVFXPrefab: {fileID: 3528051367564371829, guid: dca59b7a4630b9f40b5264cd8458014a, type: 3}
   hitVFXPrefab: {fileID: 833273125943498317, guid: 9eaf97f03c39c9743a286e2ac3725124, type: 3}
   slashLocalOffset: {x: 0, y: 0, z: 0}
-  slashLocalEulerOffset: {x: -180, y: -10, z: -180}
-  slashScale: 3
+  slashLocalEulerOffset: {x: -30, y: -90, z: 180}
+  slashScale: 1.5
   vfxBaseDuration: 1
-  vfxLifetime: 0.65
+  vfxLifetime: 0.5
   isProjectileAttack: 0
   projectilePrefab: {fileID: 0}
   projectileSpawnOffset: {x: 0, y: 1, z: 0.6}

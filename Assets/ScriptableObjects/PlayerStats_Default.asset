@@ -18,7 +18,7 @@ MonoBehaviour:
   lockOnMaxDistance: 15
   maxStamina: 100
   staminaRegenPerSecond: 50
-  staminaRegenDelayAfterUse: 1
+  staminaRegenDelayAfterUse: 0.75
   maxMana: 200
   manaRegenPerSecond: 50
   maxPoise: 100
@@ -26,7 +26,7 @@ MonoBehaviour:
   poiseRegenPerSecond: 30
   breakDuration: 2
   impactProfile: {fileID: 11400000, guid: 44d38290032ebcc4e8b7fc70e9806849, type: 2}
-  dodgeDistance: 3.5
+  dodgeDistance: 4
   dodgeDuration: 0.5
   dodgeStaminaCost: 10
   dodgeCooldown: 0

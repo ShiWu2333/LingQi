@@ -19640,6 +19640,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1893503458}
     m_Modifications:
+    - target: {fileID: -9165797768001435688, guid: 75514ee5b3bb4294899b4fe8fd8bd768, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 8668e1ad93253c5439d0caad16acdd10, type: 2}
     - target: {fileID: -8679921383154817045, guid: 75514ee5b3bb4294899b4fe8fd8bd768, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.3000001
@@ -34018,9 +34022,12 @@ MonoBehaviour:
   chargeStartStateName: ChargeStart
   chargeLoopStateName: ChargeLoop
   locomotionCrossFade: 0.1
-  attackCrossFade: 0.05
-  rollCrossFade: 0.05
+  attackCrossFade: 0.1
+  rollCrossFade: 0.1
   hitCrossFade: 0.03
+  moveDirDamp: 0.1
+  moveSpeedDamp: 0.06
+  moveSpeedMax: 6
 --- !u!1001 &1895658129
 PrefabInstance:
   m_ObjectHideFlags: 0
